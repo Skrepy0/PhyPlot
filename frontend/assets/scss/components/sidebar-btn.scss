@@ -3,6 +3,7 @@ $btn-bg-hover: rgba(65, 153, 114, 0.5);
 $btn-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 
 .sidebar-btn {
+  margin: 15px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -17,12 +18,10 @@ $btn-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   opacity: 1;
   transform: none;
 
-  animation: fadeInUp 0.5s ease-out;
-
   transition:
-          background-color 0.3s ease,
-          transform 0.2s ease,
-          box-shadow 0.2s ease;
+    background-color 0.3s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 
   &:hover {
     background-color: $btn-bg-hover;
@@ -31,18 +30,13 @@ $btn-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 
   &:active {
     transform: scale(0.9);
+    transition: transform 0.3s;
   }
 
-  svg, img {
+  svg,
+  img {
     width: 24px;
     height: 24px;
     display: block;
-  }
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateX(-20px) scale(0.5);
   }
 }

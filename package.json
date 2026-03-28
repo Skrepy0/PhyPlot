@@ -6,10 +6,12 @@
     "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
     "dev:frontend": "cd frontend && npm run dev",
     "dev:backend": "cd backend && venv\\Scripts\\python src/app.py",
-    "install:all": "npm install && cd frontend && npm install && cd ../backend && npm install"
+    "install:all": "npm install && cd frontend && npm install && cd ../backend && npm install",
+    "format": "prettier --write ."
   },
   "devDependencies": {
     "concurrently": "^8.2.2",
+    "prettier": "^3.8.1",
     "sass-embedded": "^1.98.0"
   }
 }

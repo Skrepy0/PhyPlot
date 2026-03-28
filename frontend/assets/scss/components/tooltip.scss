@@ -1,20 +1,19 @@
 // 可配置变量
-$tooltip-bg: rgba(62, 156, 121, 0.70);
+$tooltip-bg: rgba(62, 156, 121, 0.7);
 $tooltip-color: #fff;
 $tooltip-font-size: 12px;
 $tooltip-padding: 3px 8px;
 $tooltip-border-radius: 6px;
 $tooltip-arrow-size: 6px;
-$tooltip-offset: 8px;          // 距离目标元素的偏移量
+$tooltip-offset: 8px; // 距离目标元素的偏移量
 $tooltip-transition-duration: 0.2s;
-$tooltip-transition-timing: cubic-bezier(0.2, 0.9, 0.4, 1.1); // 弹性缓动
+$tooltip-transition-timing: cubic-bezier(0.2, 0.9, 0.4, 1.1);
 $tooltip-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 
 [tooltip] {
   position: relative;
   cursor: help;
 
-  // 提示内容
   &::before {
     content: attr(tooltip);
     position: absolute;
@@ -27,25 +26,23 @@ $tooltip-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     font-size: $tooltip-font-size;
     padding: $tooltip-padding;
     border-radius: $tooltip-border-radius;
-    white-space: nowrap;           // 默认单行（可改为 normal 支持多行）
+    white-space: nowrap;
     z-index: 1000;
     box-shadow: $tooltip-shadow;
     opacity: 0;
     visibility: hidden;
     transition:
-            opacity $tooltip-transition-duration $tooltip-transition-timing,
-            visibility $tooltip-transition-duration $tooltip-transition-timing,
-            transform $tooltip-transition-duration $tooltip-transition-timing;
-    transform: scale(0.9);         // 初始缩放
+      opacity $tooltip-transition-duration $tooltip-transition-timing,
+      visibility $tooltip-transition-duration $tooltip-transition-timing,
+      transform $tooltip-transition-duration $tooltip-transition-timing;
+    transform: scale(0.9); // 初始缩放
     pointer-events: none;
 
-    // 支持多行（如果需要，可将 white-space 改为 normal 并设置最大宽度）
     // white-space: normal;
     // max-width: 200px;
     // word-break: break-word;
   }
 
-  // 小箭头
   &::after {
     content: '';
     position: absolute;
@@ -53,12 +50,11 @@ $tooltip-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     opacity: 0;
     visibility: hidden;
     transition:
-            opacity $tooltip-transition-duration $tooltip-transition-timing,
-            visibility $tooltip-transition-duration $tooltip-transition-timing;
+      opacity $tooltip-transition-duration $tooltip-transition-timing,
+      visibility $tooltip-transition-duration $tooltip-transition-timing;
     pointer-events: none;
   }
 
-  // hover 时显示，并重置缩放
   &:hover::before,
   &:hover::after {
     opacity: 1;
@@ -68,8 +64,6 @@ $tooltip-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     transform: scale(1);
   }
 
-  // ---------- 位置定位 ----------
-  // 默认：顶部（top）
   &::before {
     bottom: calc(100% + #{$tooltip-offset});
     left: 50%;
@@ -86,7 +80,6 @@ $tooltip-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     border-top-color: $tooltip-bg;
   }
 
-  // 底部（bottom）
   &[data-position='bottom']::before {
     top: calc(100% + #{$tooltip-offset});
     bottom: auto;
@@ -106,7 +99,6 @@ $tooltip-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     border-top-color: transparent;
   }
 
-  // 左侧（left）
   &[data-position='left']::before {
     right: calc(100% + #{$tooltip-offset});
     left: auto;
@@ -126,7 +118,6 @@ $tooltip-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     border-top-color: transparent;
   }
 
-  // 右侧（right）
   &[data-position='right']::before {
     left: calc(100% + #{$tooltip-offset});
     right: auto;
