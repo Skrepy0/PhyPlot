@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {ref} from 'vue'
+import SideBar from "~/components/SideBar.vue";
 interface Data {
   data:number
 }
@@ -17,10 +18,7 @@ const getData = async () => {
 }
 </script>
 <template>
-  <div>
-  <button @click="getData">
-    {{buttonData}}
-  </button>
-  </div>
+  <BackGround/>
+  <SideBar></SideBar>
 </template>
 
