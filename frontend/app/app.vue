@@ -5,7 +5,8 @@ import Head from '~/components/Head.vue'
 import Foot from '~/components/Foot.vue'
 import Toast from '~/components/data-components/Toast.vue'
 import UnivariateStatistics from '~/components/univariate-statistics/UnivariateStatistics.vue'
-
+import Dialog from '~/components/data-components/Dialog.vue'
+const dialogRef = ref()
 const toastRef = ref<InstanceType<typeof Toast> | null>(null)
 const pageStatus = ref<InstanceType<typeof SideBar> | null>(null)
 const toastAdd = (message: string, options?: any) => {
@@ -15,6 +16,18 @@ const toastAdd = (message: string, options?: any) => {
     console.warn('Toast 组件尚未挂载')
   }
 }
+
+const showDialog = (options: {
+  title?: string
+  message: string
+  confirmText?: string
+  cancelText?: string
+  onConfirm?: () => void
+  onCancel?: () => void
+}) => {
+  return dialogRef.value.show(options)
+}
+provide('dialog', showDialog)
 provide('toast', toastAdd)
 </script>
 <template>
@@ -23,6 +36,7 @@ provide('toast', toastAdd)
   <div class="context">
     <SideBar ref="pageStatus" />
     <UnivariateStatistics :show="pageStatus?.showUnivariateStatistics" />
+    <Dialog ref="dialogRef" />
     <Toast ref="toastRef" />
   </div>
   <Foot />

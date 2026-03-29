@@ -1,10 +1,15 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+
 const showSidebar = ref(false)
 const showUnivariateStatistics = ref(false)
 
 const hideSidebar = () => {
   showSidebar.value = false
+}
+const showUS = () => {
+  showUnivariateStatistics.value = true
+  hideSidebar()
 }
 defineExpose({
   showUnivariateStatistics,
@@ -19,10 +24,7 @@ defineExpose({
         class="data-point-btn sidebar-btn"
         tooltip="单变量统计"
         data-position="right"
-        @click="
-          showUnivariateStatistics = true
-          hideSidebar()
-        "
+        @click="showUS"
       >
         <svg
           class="icon"
@@ -121,6 +123,7 @@ defineExpose({
 <style scoped lang="scss">
 @use '../../assets/scss/components/tooltip';
 @use '../../assets/scss/components/sidebar-btn';
+
 .sidebar-container {
   margin: 1px;
   flex-direction: column;

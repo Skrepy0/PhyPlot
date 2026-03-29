@@ -13,5 +13,8 @@
     "concurrently": "^8.2.2",
     "prettier": "^3.8.1",
     "sass-embedded": "^1.98.0"
+  },
+  "dependencies": {
+    "decimal.js": "^10.6.0"
   }
 }

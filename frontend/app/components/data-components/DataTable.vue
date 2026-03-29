@@ -1,10 +1,13 @@
 <script setup lang="ts">
-import { ref, watch, nextTick } from 'vue'
+import { ref, watch, nextTick, inject } from 'vue'
+import type { DialogOptions } from '~/composables/interface/dialog'
 
-type SingleRow = { id: number; value: number }
-type DoubleRow = { id: number; x: number; y: number }
+type SingleRow = { id: number; value: string }
+type DoubleRow = { id: number; x: string; y: string }
 type Row = SingleRow | DoubleRow
-
+const dialog = inject<(options: DialogOptions) => Promise<boolean>>('dialog')
+const toast = inject<(message: string, options?: any) => void>('toast')
+const numberRegex = /^-?\d+(\.\d+)?([eE][-+]?\d+)?$/
 const props = defineProps<{
   variableType: 'single' | 'double'
   modelValue?: Row[]
@@ -14,13 +17,33 @@ const emit = defineEmits<{
   (e: 'update:modelValue', value: Row[]): void
 }>()
 
-const rows = ref<Row[]>(props.modelValue || [])
-
-const getNextId = () => {
-  if (rows.value.length === 0) return 1
-  return Math.max(...rows.value.map((r) => r.id)) + 1
+const normalizeRows = (input: any[]): Row[] => {
+  if (!Array.isArray(input)) return []
+  return input.map((item) => {
+    const id =
+      typeof item.id === 'string' ? parseInt(item.id, 10) : (item.id as number)
+    if (props.variableType === 'single') {
+      return { id, value: item.value !== undefined ? String(item.value) : '0' }
+    } else {
+      return {
+        id,
+        x: item.x !== undefined ? String(item.x) : '0',
+        y: item.y !== undefined ? String(item.y) : '0',
+      }
+    }
+  })
 }
-let nextId = getNextId()
+
+const rows = ref<Row[]>(normalizeRows(props.modelValue || []))
+
+watch(
+  () => props.modelValue,
+  (newVal) => {
+    rows.value = normalizeRows(newVal || [])
+    nextId = getNextId()
+  },
+  { deep: true }
+)
 
 watch(
   rows,
@@ -31,32 +54,40 @@ watch(
   { deep: true }
 )
 
-const getX = (row: Row) => {
-  return props.variableType === 'single'
-    ? (row as SingleRow).value
-    : (row as DoubleRow).x
+const getNextId = (): number => {
+  if (rows.value.length === 0) return 1
+  return Math.max(...rows.value.map((r) => r.id)) + 1
+}
+let nextId = getNextId()
+
+const getX = (row: Row): string => {
+  if (props.variableType === 'single') {
+    return (row as SingleRow).value
+  } else {
+    return (row as DoubleRow).x
+  }
 }
 
-const getY = (row: Row) => {
+const getY = (row: Row): string => {
   return props.variableType === 'double' ? (row as DoubleRow).y : ''
 }
 
 const setX = (e: Event) => {
-  const val = parseFloat((e.target as HTMLInputElement).value) || 0
+  const val = (e.target as HTMLInputElement).value
   editBuffer.value.value = val
   editBuffer.value.x = val
 }
 
 const setY = (e: Event) => {
-  const val = parseFloat((e.target as HTMLInputElement).value) || 0
+  const val = (e.target as HTMLInputElement).value
   editBuffer.value.y = val
 }
 
 const addRow = () => {
   if (props.variableType === 'single') {
-    rows.value.push({ id: nextId++, value: 0 })
+    rows.value.push({ id: nextId++, value: '0' })
   } else {
-    rows.value.push({ id: nextId++, x: 0, y: 0 })
+    rows.value.push({ id: nextId++, x: '0', y: '0' })
   }
 }
 
@@ -70,28 +101,22 @@ const lastAddedId = ref<number | null>(null)
 
 const startEdit = (row: Row) => {
   editingId.value = row.id
-
   if (props.variableType === 'single') {
     editBuffer.value = { value: (row as SingleRow).value }
   } else {
-    editBuffer.value = {
-      x: (row as DoubleRow).x,
-      y: (row as DoubleRow).y,
-    }
+    editBuffer.value = { x: (row as DoubleRow).x, y: (row as DoubleRow).y }
   }
 }
 
 const saveEdit = (id: number) => {
   const index = rows.value.findIndex((r) => r.id === id)
   if (index === -1) return
-
   if (props.variableType === 'single') {
-    ;(rows.value[index] as SingleRow).value = editBuffer.value.value ?? 0
+    ;(rows.value[index] as SingleRow).value = editBuffer.value.value ?? '0'
   } else {
-    ;(rows.value[index] as DoubleRow).x = editBuffer.value.x ?? 0
-    ;(rows.value[index] as DoubleRow).y = editBuffer.value.y ?? 0
+    ;(rows.value[index] as DoubleRow).x = editBuffer.value.x ?? '0'
+    ;(rows.value[index] as DoubleRow).y = editBuffer.value.y ?? '0'
   }
-
   cancelEdit()
 }
 
@@ -100,36 +125,55 @@ const cancelEdit = () => {
   editBuffer.value = {}
 }
 
-const newRowBuffer = ref<any>(
-  props.variableType === 'single' ? { value: 0 } : { x: 0, y: 0 }
+const newRowBuffer = ref(
+  props.variableType === 'single' ? { value: '' } : { x: '', y: '' }
 )
-
+const isValidNumber = (val: string) => {
+  return numberRegex.test(val.trim())
+}
 const commitAdd = () => {
-  let newId = nextId
-  if (props.variableType === 'single') {
-    rows.value.push({
-      id: newId++,
-      value: newRowBuffer.value.value ?? 0,
-    })
-    newRowBuffer.value = { value: 0 }
-  } else {
-    rows.value.push({
-      id: newId++,
-      x: newRowBuffer.value.x ?? 0,
-      y: newRowBuffer.value.y ?? 0,
-    })
-    newRowBuffer.value = { x: 0, y: 0 }
+  const check = (val: string) => {
+    if (!isValidNumber(val)) {
+      toast?.(`非法输入: ${val}`, { type: 'error' })
+      return false
+    }
+    return true
   }
 
-  lastAddedId.value = newId
+  let newId = nextId
 
-  // DOM 更新后滚动到底部
+  if (props.variableType === 'single') {
+    const v = newRowBuffer.value.value || '0'
+
+    if (!check(v)) return
+
+    rows.value.push({
+      id: newId++,
+      value: v,
+    })
+
+    newRowBuffer.value = { value: '' }
+  } else {
+    const x = newRowBuffer.value.x || '0'
+    const y = newRowBuffer.value.y || '0'
+
+    if (!check(x) || !check(y)) return
+
+    rows.value.push({
+      id: newId++,
+      x,
+      y,
+    })
+
+    newRowBuffer.value = { x: '0', y: '0' }
+  }
+
+  lastAddedId.value = newId - 1
+
   nextTick(() => {
-    const tableWrapper = document.querySelector('.table-wrapper') as HTMLElement
-    if (tableWrapper) {
-      tableWrapper.scrollTop = tableWrapper.scrollHeight
-    }
-    // 1秒后清除高亮
+    const wrapper = document.querySelector('.table-wrapper') as HTMLElement
+    if (wrapper) wrapper.scrollTop = wrapper.scrollHeight
+
     setTimeout(() => {
       lastAddedId.value = null
     }, 1000)
@@ -140,7 +184,27 @@ const resetData = () => {
   rows.value = []
   nextId = 1
 }
+const clearAll = async () => {
+  if (rows.value.length === 0) {
+    toast?.('当前没有数据可清空', { type: 'warning' })
+    return
+  }
 
+  const confirmed = await dialog?.({
+    title: '删除确认',
+    message: '确定要清空所有数据吗？',
+  })
+
+  if (!confirmed) return
+
+  rows.value = []
+  nextId = 1
+
+  newRowBuffer.value =
+    props.variableType === 'single' ? { value: '' } : { x: '', y: '' }
+
+  toast?.('数据已清空', { type: 'success' })
+}
 defineExpose({ addRow, deleteRow, resetData })
 </script>
 
@@ -156,7 +220,6 @@ defineExpose({ addRow, deleteRow, resetData })
             <th class="action-col">操作</th>
           </tr>
         </thead>
-
         <tbody>
           <tr
             v-for="(row, index) in rows"
@@ -164,12 +227,10 @@ defineExpose({ addRow, deleteRow, resetData })
             :class="{ 'new-row': lastAddedId === row.id }"
           >
             <td>{{ index + 1 }}</td>
-
-            <!-- X -->
             <td>
               <template v-if="editingId === row.id">
                 <input
-                  type="number"
+                  type="text"
                   :value="getX(row)"
                   @input="setX"
                   class="edit-input"
@@ -180,12 +241,10 @@ defineExpose({ addRow, deleteRow, resetData })
                 {{ getX(row) }}
               </template>
             </td>
-
-            <!-- Y -->
             <td v-if="variableType === 'double'">
               <template v-if="editingId === row.id">
                 <input
-                  type="number"
+                  type="text"
                   :value="getY(row)"
                   @input="setY"
                   class="edit-input"
@@ -196,8 +255,6 @@ defineExpose({ addRow, deleteRow, resetData })
                 {{ getY(row) }}
               </template>
             </td>
-
-            <!-- 操作 -->
             <td class="action-buttons">
               <template v-if="editingId === row.id">
                 <button class="action-btn save-btn" @click="saveEdit(row.id)">
@@ -220,7 +277,6 @@ defineExpose({ addRow, deleteRow, resetData })
               </template>
             </td>
           </tr>
-
           <tr v-if="rows.length === 0">
             <td
               :colspan="variableType === 'double' ? 4 : 3"
@@ -233,40 +289,38 @@ defineExpose({ addRow, deleteRow, resetData })
       </table>
     </div>
 
-    <!-- 添加 -->
     <div class="add-form">
       <div class="form-title">添加新数据</div>
-
       <div class="form-fields">
         <input
-          type="number"
-          v-model.number="newRowBuffer.value"
+          type="text"
+          v-model="newRowBuffer.value"
           v-if="variableType === 'single'"
           placeholder="X"
           class="form-input"
           @keydown.enter="commitAdd"
         />
-
         <template v-else>
           <input
-            type="number"
-            v-model.number="newRowBuffer.x"
+            type="text"
+            v-model="newRowBuffer.x"
             placeholder="X"
             class="form-input"
           />
           <input
-            type="number"
-            v-model.number="newRowBuffer.y"
+            type="text"
+            v-model="newRowBuffer.y"
             placeholder="Y"
             class="form-input"
             @keydown.enter="commitAdd"
           />
         </template>
-
         <button class="add-btn" @click="commitAdd">+ 添加</button>
+        <button class="clear-btn" @click="clearAll">清空</button>
       </div>
     </div>
   </div>
+  <Dialog ref="dialogRef" />
 </template>
 
 <style scoped lang="scss">
@@ -563,7 +617,28 @@ $shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     transform: translateY(0);
   }
 }
+.clear-btn {
+  background: transparent;
+  border: 1px solid rgba(220, 53, 69, 0.5);
+  color: rgba(220, 53, 69, 0.8);
+  border-radius: 8px;
+  padding: 10px 18px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  white-space: nowrap;
 
+  &:hover {
+    background: rgba(220, 53, 69, 0.15);
+    border-color: #dc3545;
+    color: #dc3545;
+    transform: translateY(-2px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
 /* 响应式设计 */
 @media (max-width: 768px) {
   .data-table-container {

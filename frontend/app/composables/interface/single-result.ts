@@ -1,10 +1,11 @@
 export interface SingleResult {
-  count: number
-  variance: number
-  stdErr: number
-  meanStdDev: number
-  mean: number
-  stdDev: number
-  uncertainty: number
-  confidenceInterval: [number, number]
+  count: string
+  variance: string
+  stdErr: string
+  meanStdDev: string
+  mean: string
+  stdDev: string
+  uncertainty: [string, string] // [A类不确定度, B类不确定度]
+  stdUncertainty: string
+  confidenceInterval: [string, string]
 }

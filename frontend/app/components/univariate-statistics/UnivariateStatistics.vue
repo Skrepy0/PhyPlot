@@ -1,33 +1,64 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, inject } from 'vue'
 import DataTable from '~/components/data-components/DataTable.vue'
 import type { SingleResult } from '~/composables/interface/single-result'
-import SideBar from '~/components/SideBar.vue'
 import { solve } from '~/composables/solve-data/single-data'
-const props = defineProps({
-  show: Boolean,
-})
+import { Decimal } from 'decimal.js'
 
-const confidenceOptions = ['68.3%', '95.4%', '99.7%']
-const selectedConfidence = ref('95.4%')
-const significantDigits = ref(4)
+const props = defineProps({ show: Boolean })
 
-const singleData = ref([])
-console.log(singleData.value)
+const confidenceOptions = ['68.3%', '95%', '99.7%']
+const selectedConfidence = ref<string>('68.3%')
+const errorDistributionOptions = ['均匀分布', '三角分布', '正态分布']
+const selectedErrorDistribution = ref<string>('均匀分布')
+const significantDigits = ref<number>(4)
+const marginError = ref<string>('0')
+const toast = inject<(message: string, options?: any) => void>('toast')
+const singleData = ref<{ id: number; value: string }[]>([])
+
+// 所有字段初始化为空字符串
 const results = ref<SingleResult>({
-  count: 0,
-  variance: 0,
-  stdErr: 0,
-  meanStdDev: 0,
-  mean: 0,
-  stdDev: 0,
-  uncertainty: 0,
-  confidenceInterval: [0, 0],
+  count: '',
+  variance: '',
+  stdErr: '',
+  meanStdDev: '',
+  mean: '',
+  stdDev: '',
+  uncertainty: ['', ''],
+  stdUncertainty: '',
+  confidenceInterval: ['', ''],
 })
-
-const formatNumber = (v: number) => v.toFixed(significantDigits.value)
-const submit = () => {
-  solve(results)
+const copyValue = async (val: string | number) => {
+  try {
+    await navigator.clipboard.writeText(String(val))
+    toast?.(`已复制 ${val}`, { type: 'success' })
+  } catch (err) {
+    toast?.('复制失败', { type: 'error' })
+  }
+}
+const submit = async () => {
+  if (singleData.value.length === 0) {
+    toast?.('请输入数据点', { type: 'error' })
+    return
+  }
+  const percentStr = selectedConfidence.value
+  const parts = percentStr.split('%')
+  if (parts.length < 2 || !parts[0]) {
+    toast?.('请选择有效的置信概率', { type: 'error' })
+    return
+  }
+  const p = new Decimal(parts[0]).div(100).toString()
+  if ([1, 11, 13, 14, 16, 17, 18, 19].includes(singleData.value.length)) {
+    toast?.('t因子表中无此次样本数量！', { type: 'warning' })
+  }
+  await solve(
+    results,
+    singleData.value,
+    p,
+    marginError.value,
+    selectedErrorDistribution.value,
+    significantDigits.value // 传入有效数字位数
+  )
 }
 </script>
 
@@ -49,6 +80,24 @@ const submit = () => {
                 </option>
               </select>
             </div>
+            <div class="form-row">
+              <label class="form-label">误差分布</label>
+              <select v-model="selectedErrorDistribution" class="form-select">
+                <option v-for="opt in errorDistributionOptions" :key="opt">
+                  {{ opt }}
+                </option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label class="form-label">误差限</label>
+              <input
+                type="number"
+                v-model.number="marginError"
+                class="form-input"
+                min="1"
+                max="10"
+              />
+            </div>
 
             <div class="form-row">
               <label class="form-label">有效数字</label>
@@ -57,7 +106,7 @@ const submit = () => {
                 v-model.number="significantDigits"
                 class="form-input"
                 min="1"
-                max="10"
+                max="16"
               />
             </div>
 
@@ -77,60 +126,64 @@ const submit = () => {
           <h2 class="card-title">处理结果</h2>
 
           <div class="results-list">
-            <div class="result-item">
+            <div class="result-item" @click="copyValue(results.count)">
               <span class="result-label">数据总数n</span>
               <span class="result-value">
-                {{ results ? formatNumber(results?.count) : '-' }}
+                {{ results.count || '-' }}
               </span>
             </div>
-            <div class="result-item">
-              <span class="result-label">算术平均值</span>
+            <div class="result-item" @click="copyValue(results.mean)">
+              <span class="result-label">算术平均值x̄</span>
               <span class="result-value">
-                {{ results ? formatNumber(results?.mean) : '-' }}
+                {{ results.mean || '-' }}
               </span>
             </div>
-            <div class="result-item">
-              <span class="result-label">方差</span>
+            <div class="result-item" @click="copyValue(results.variance)">
+              <span class="result-label">方差D</span>
               <span class="result-value">
-                {{ results ? formatNumber(results?.variance) : '-' }}
+                {{ results.variance || '-' }}
               </span>
             </div>
-            <div class="result-item">
-              <span class="result-label">标准误差</span>
+            <div class="result-item" @click="copyValue(results.stdErr)">
+              <span class="result-label">标准误差(方均根误差)σ</span>
               <span class="result-value">
-                {{ results ? formatNumber(results?.stdErr) : '-' }}
+                {{ results.stdErr || '-' }}
               </span>
             </div>
-            <div class="result-item">
+            <div class="result-item" @click="copyValue(results.stdDev)">
               <span class="result-label">样本标准差</span>
               <span class="result-value">
-                {{ results ? formatNumber(results?.stdDev) : '-' }}
+                {{ results.stdDev || '-' }}
               </span>
             </div>
-            <div class="result-item">
+            <div class="result-item" @click="copyValue(results.meanStdDev)">
               <span class="result-label">均值标准差</span>
               <span class="result-value">
-                {{ results ? formatNumber(results?.meanStdDev) : '-' }}
+                {{ results.meanStdDev || '-' }}
               </span>
             </div>
-            <div class="result-item">
+            <div
+              class="result-item"
+              @click="copyValue(results.uncertainty.at(0) || '-')"
+            >
               <span class="result-label">A类不确定度</span>
               <span class="result-value">
-                {{ results ? formatNumber(results?.uncertainty) : '-' }}
+                {{ results.uncertainty.at(0) || '-' }}
               </span>
             </div>
-
-            <div class="result-item">
-              <span class="result-label">
-                {{ selectedConfidence }} 置信区间
-              </span>
+            <div
+              class="result-item"
+              @click="copyValue(results.uncertainty.at(1) || '-')"
+            >
+              <span class="result-label">B类不确定度</span>
               <span class="result-value">
-                [{{
-                  results ? formatNumber(results?.confidenceInterval[0]) : '-'
-                }},
-                {{
-                  results ? formatNumber(results?.confidenceInterval[1]) : '-'
-                }}]
+                {{ results.uncertainty.at(1) || '-' }}
+              </span>
+            </div>
+            <div class="result-item" @click="copyValue(results.stdUncertainty)">
+              <span class="result-label">标准不确定度</span>
+              <span class="result-value">
+                {{ results.stdUncertainty || '-' }}
               </span>
             </div>
           </div>
@@ -156,8 +209,6 @@ $shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
   padding-left: 20px;
 }
 
-/* ================= 布局 ================= */
-
 .cards-wrapper {
   display: flex;
   gap: 24px;
@@ -165,7 +216,6 @@ $shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
   padding: 20px 0;
 }
 
-/* 左右比例优化 */
 .config-card {
   flex: 1.2;
 }
@@ -174,12 +224,11 @@ $shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
   flex: 0.8;
 }
 
-/* 卡片统一 */
 .config-card,
 .result-card {
   display: flex;
   flex-direction: column;
-  height: 600px;
+  height: 700px;
   background: rgba(10, 15, 12, 0.92);
   backdrop-filter: blur(12px);
   border-radius: 24px;
@@ -195,8 +244,6 @@ $shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
   }
 }
 
-/* ================= 标题 ================= */
-
 .card-title {
   font-size: 1.5rem;
   margin-bottom: 16px;
@@ -204,8 +251,6 @@ $shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
   border-bottom: 1px solid rgba(46, 204, 113, 0.4);
   color: $accent-green;
 }
-
-/* ================= 表单 ================= */
 
 .config-data-content {
   display: flex;
@@ -252,20 +297,17 @@ $shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
   overflow: hidden;
 }
 
-/* 让 DataTable 填满 */
 .table-container :deep(.data-table-container) {
   height: 100%;
   display: flex;
   flex-direction: column;
 }
 
-/* 表格滚动 */
 .table-container :deep(.table-wrapper) {
   flex: 1;
   overflow-y: auto;
 }
 
-/* 添加区固定底部 */
 .table-container :deep(.add-form) {
   margin-top: auto;
 }
@@ -285,10 +327,11 @@ $shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: space-between;
   border: 1px solid rgba(46, 204, 113, 0.2);
-
+  cursor: pointer;
   &:hover {
     border-color: $accent-green;
     transform: translateX(4px);
+    transition: all 0.3s ease;
   }
 }
 
@@ -321,7 +364,6 @@ $shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
   align-items: center;
   gap: 8px;
 
-  // 可选：添加一个提交图标（使用伪元素或背景图）
   &::before {
     content: '✓';
     font-size: 1.2rem;
@@ -360,6 +402,25 @@ $shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
   .result-card {
     width: 100%;
     height: auto;
+  }
+}
+.config-card,
+.result-card {
+  animation: cardFadeIn 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.result-card {
+  animation-delay: 0.1s;
+}
+
+@keyframes cardFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 </style>
