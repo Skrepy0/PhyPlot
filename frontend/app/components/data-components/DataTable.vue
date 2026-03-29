@@ -1,0 +1,593 @@
+<script setup lang="ts">
+import { ref, watch, nextTick } from 'vue'
+
+type SingleRow = { id: number; value: number }
+type DoubleRow = { id: number; x: number; y: number }
+type Row = SingleRow | DoubleRow
+
+const props = defineProps<{
+  variableType: 'single' | 'double'
+  modelValue?: Row[]
+}>()
+
+const emit = defineEmits<{
+  (e: 'update:modelValue', value: Row[]): void
+}>()
+
+const rows = ref<Row[]>(props.modelValue || [])
+
+const getNextId = () => {
+  if (rows.value.length === 0) return 1
+  return Math.max(...rows.value.map((r) => r.id)) + 1
+}
+let nextId = getNextId()
+
+watch(
+  rows,
+  (val) => {
+    emit('update:modelValue', val)
+    nextId = getNextId()
+  },
+  { deep: true }
+)
+
+const getX = (row: Row) => {
+  return props.variableType === 'single'
+    ? (row as SingleRow).value
+    : (row as DoubleRow).x
+}
+
+const getY = (row: Row) => {
+  return props.variableType === 'double' ? (row as DoubleRow).y : ''
+}
+
+const setX = (e: Event) => {
+  const val = parseFloat((e.target as HTMLInputElement).value) || 0
+  editBuffer.value.value = val
+  editBuffer.value.x = val
+}
+
+const setY = (e: Event) => {
+  const val = parseFloat((e.target as HTMLInputElement).value) || 0
+  editBuffer.value.y = val
+}
+
+const addRow = () => {
+  if (props.variableType === 'single') {
+    rows.value.push({ id: nextId++, value: 0 })
+  } else {
+    rows.value.push({ id: nextId++, x: 0, y: 0 })
+  }
+}
+
+const deleteRow = (id: number) => {
+  rows.value = rows.value.filter((r) => r.id !== id)
+}
+
+const editingId = ref<number | null>(null)
+const editBuffer = ref<any>({})
+const lastAddedId = ref<number | null>(null)
+
+const startEdit = (row: Row) => {
+  editingId.value = row.id
+
+  if (props.variableType === 'single') {
+    editBuffer.value = { value: (row as SingleRow).value }
+  } else {
+    editBuffer.value = {
+      x: (row as DoubleRow).x,
+      y: (row as DoubleRow).y,
+    }
+  }
+}
+
+const saveEdit = (id: number) => {
+  const index = rows.value.findIndex((r) => r.id === id)
+  if (index === -1) return
+
+  if (props.variableType === 'single') {
+    ;(rows.value[index] as SingleRow).value = editBuffer.value.value ?? 0
+  } else {
+    ;(rows.value[index] as DoubleRow).x = editBuffer.value.x ?? 0
+    ;(rows.value[index] as DoubleRow).y = editBuffer.value.y ?? 0
+  }
+
+  cancelEdit()
+}
+
+const cancelEdit = () => {
+  editingId.value = null
+  editBuffer.value = {}
+}
+
+const newRowBuffer = ref<any>(
+  props.variableType === 'single' ? { value: 0 } : { x: 0, y: 0 }
+)
+
+const commitAdd = () => {
+  let newId = nextId
+  if (props.variableType === 'single') {
+    rows.value.push({
+      id: newId++,
+      value: newRowBuffer.value.value ?? 0,
+    })
+    newRowBuffer.value = { value: 0 }
+  } else {
+    rows.value.push({
+      id: newId++,
+      x: newRowBuffer.value.x ?? 0,
+      y: newRowBuffer.value.y ?? 0,
+    })
+    newRowBuffer.value = { x: 0, y: 0 }
+  }
+
+  lastAddedId.value = newId
+
+  // DOM 更新后滚动到底部
+  nextTick(() => {
+    const tableWrapper = document.querySelector('.table-wrapper') as HTMLElement
+    if (tableWrapper) {
+      tableWrapper.scrollTop = tableWrapper.scrollHeight
+    }
+    // 1秒后清除高亮
+    setTimeout(() => {
+      lastAddedId.value = null
+    }, 1000)
+  })
+}
+
+const resetData = () => {
+  rows.value = []
+  nextId = 1
+}
+
+defineExpose({ addRow, deleteRow, resetData })
+</script>
+
+<template>
+  <div class="data-table-container">
+    <div class="table-wrapper">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>序号</th>
+            <th>X</th>
+            <th v-if="variableType === 'double'">Y</th>
+            <th class="action-col">操作</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr
+            v-for="(row, index) in rows"
+            :key="row.id"
+            :class="{ 'new-row': lastAddedId === row.id }"
+          >
+            <td>{{ index + 1 }}</td>
+
+            <!-- X -->
+            <td>
+              <template v-if="editingId === row.id">
+                <input
+                  type="number"
+                  :value="getX(row)"
+                  @input="setX"
+                  class="edit-input"
+                  @keydown.enter="saveEdit(row.id)"
+                />
+              </template>
+              <template v-else>
+                {{ getX(row) }}
+              </template>
+            </td>
+
+            <!-- Y -->
+            <td v-if="variableType === 'double'">
+              <template v-if="editingId === row.id">
+                <input
+                  type="number"
+                  :value="getY(row)"
+                  @input="setY"
+                  class="edit-input"
+                  @keydown.enter="saveEdit(row.id)"
+                />
+              </template>
+              <template v-else>
+                {{ getY(row) }}
+              </template>
+            </td>
+
+            <!-- 操作 -->
+            <td class="action-buttons">
+              <template v-if="editingId === row.id">
+                <button class="action-btn save-btn" @click="saveEdit(row.id)">
+                  保存
+                </button>
+                <button class="action-btn cancel-btn" @click="cancelEdit">
+                  取消
+                </button>
+              </template>
+              <template v-else>
+                <button class="action-btn edit-btn" @click="startEdit(row)">
+                  编辑
+                </button>
+                <button
+                  class="action-btn delete-btn"
+                  @click="deleteRow(row.id)"
+                >
+                  删除
+                </button>
+              </template>
+            </td>
+          </tr>
+
+          <tr v-if="rows.length === 0">
+            <td
+              :colspan="variableType === 'double' ? 4 : 3"
+              class="empty-placeholder"
+            >
+              暂无数据，请添加
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 添加 -->
+    <div class="add-form">
+      <div class="form-title">添加新数据</div>
+
+      <div class="form-fields">
+        <input
+          type="number"
+          v-model.number="newRowBuffer.value"
+          v-if="variableType === 'single'"
+          placeholder="X"
+          class="form-input"
+          @keydown.enter="commitAdd"
+        />
+
+        <template v-else>
+          <input
+            type="number"
+            v-model.number="newRowBuffer.x"
+            placeholder="X"
+            class="form-input"
+          />
+          <input
+            type="number"
+            v-model.number="newRowBuffer.y"
+            placeholder="Y"
+            class="form-input"
+            @keydown.enter="commitAdd"
+          />
+        </template>
+
+        <button class="add-btn" @click="commitAdd">+ 添加</button>
+      </div>
+    </div>
+  </div>
+</template>
+
+<style scoped lang="scss">
+$bg-surface: #141a17;
+$border-green: #2ecc71;
+$text-primary: #e0e0e0;
+$text-secondary: #b0b0b0;
+$accent-green: #27ae60;
+$input-bg: #1e2522;
+$shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+
+.data-table-container {
+  background: rgba(10, 15, 12, 0.85);
+  backdrop-filter: blur(8px);
+  border-radius: 20px;
+  padding: 20px;
+  border: 1px solid rgba(46, 204, 113, 0.3);
+  box-shadow: $shadow;
+  animation: slideInUp 0.5s ease-out;
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.table-wrapper {
+  overflow-x: auto;
+  overflow-y: auto;
+  margin-bottom: 24px;
+  max-height: 200px;
+  border-radius: 12px;
+  background: rgba(20, 25, 22, 0.5);
+  padding: 4px;
+
+  /* 自定义滚动条 */
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(46, 204, 113, 0.1);
+    border-radius: 10px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(46, 204, 113, 0.4);
+    border-radius: 10px;
+    transition: background 0.3s;
+
+    &:hover {
+      background: rgba(46, 204, 113, 0.7);
+    }
+  }
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  color: $text-primary;
+  font-size: 0.9rem;
+
+  th,
+  td {
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(46, 204, 113, 0.2);
+    transition: all 0.2s ease;
+  }
+
+  th {
+    background: rgba(30, 37, 34, 0.8);
+    color: $accent-green;
+    font-weight: 600;
+    text-align: left;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  tbody tr {
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: rgba(46, 204, 113, 0.1);
+      transform: scale(1.01);
+    }
+
+    /* 新行动画 */
+    &.new-row {
+      animation: newRowSlide 0.5s ease-out;
+      background: rgba(46, 204, 113, 0.15);
+      box-shadow: inset 0 0 10px rgba(46, 204, 113, 0.2);
+    }
+  }
+}
+
+@keyframes newRowSlide {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.edit-input {
+  background: $input-bg;
+  border: 2px solid rgba(46, 204, 113, 0.3);
+  border-radius: 8px;
+  padding: 6px 10px;
+  color: $text-primary;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  outline: none;
+
+  &:focus {
+    border-color: $accent-green;
+    box-shadow: 0 0 8px rgba(46, 204, 113, 0.3);
+  }
+
+  &:hover {
+    border-color: rgba(46, 204, 113, 0.5);
+  }
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.action-btn {
+  border: 1px solid rgba(46, 204, 113, 0.4);
+  border-radius: 6px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  background: transparent;
+  color: $text-secondary;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  &.edit-btn {
+    border-color: rgba(46, 204, 113, 0.4);
+    color: rgba(46, 204, 113, 0.7);
+
+    &:hover {
+      background: rgba(46, 204, 113, 0.1);
+      border-color: $accent-green;
+      color: $accent-green;
+    }
+  }
+
+  &.delete-btn {
+    border-color: rgba(220, 53, 69, 0.4);
+    color: rgba(220, 53, 69, 0.7);
+
+    &:hover {
+      background: rgba(220, 53, 69, 0.1);
+      border-color: #dc3545;
+      color: #dc3545;
+    }
+  }
+
+  &.save-btn {
+    background: $accent-green;
+    border-color: $accent-green;
+    color: white;
+    font-weight: 600;
+
+    &:hover {
+      background: #1e8f5e;
+      box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
+    }
+  }
+
+  &.cancel-btn {
+    border-color: rgba(200, 200, 200, 0.4);
+    color: rgba(200, 200, 200, 0.7);
+
+    &:hover {
+      background: rgba(200, 200, 200, 0.1);
+      border-color: rgba(200, 200, 200, 0.7);
+      color: rgba(200, 200, 200, 0.9);
+    }
+  }
+}
+
+.empty-placeholder {
+  text-align: center;
+  color: $text-secondary;
+  padding: 40px 20px;
+  font-style: italic;
+}
+
+.add-form {
+  border-top: 1px solid rgba(46, 204, 113, 0.3);
+  padding-top: 20px;
+  animation: slideInUp 0.5s ease-out 0.1s both;
+}
+
+.form-title {
+  font-size: 1rem;
+  color: $accent-green;
+  margin-bottom: 12px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.form-fields {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.form-input {
+  background: $input-bg;
+  border: 2px solid rgba(46, 204, 113, 0.3);
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: $text-primary;
+  flex: 1;
+  min-width: 100px;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  outline: none;
+
+  &::placeholder {
+    color: $text-secondary;
+    opacity: 0.7;
+  }
+
+  &:focus {
+    border-color: $accent-green;
+    box-shadow: 0 0 8px rgba(46, 204, 113, 0.3);
+    background: rgba(30, 37, 34, 0.8);
+  }
+
+  &:hover {
+    border-color: rgba(46, 204, 113, 0.5);
+  }
+}
+
+.add-btn {
+  background: $accent-green;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 24px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  &:hover {
+    background: #1e8f5e;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(46, 204, 113, 0.3);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .data-table-container {
+    padding: 16px;
+    border-radius: 16px;
+  }
+
+  .table-wrapper {
+    max-height: 300px;
+  }
+
+  .form-fields {
+    gap: 8px;
+  }
+
+  .form-input,
+  .add-btn {
+    font-size: 0.85rem;
+    padding: 8px 10px;
+  }
+
+  .action-btn {
+    padding: 4px 8px;
+    font-size: 0.75rem;
+  }
+}
+</style>

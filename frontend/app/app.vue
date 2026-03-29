@@ -3,27 +3,11 @@ import { ref } from 'vue'
 import SideBar from '~/components/SideBar.vue'
 import Head from '~/components/Head.vue'
 import Foot from '~/components/Foot.vue'
-import Toast from '~/components/Toast.vue'
-
-interface Data {
-  data: number
-}
-
-let buttonData = ref<number>(0)
-const inputData = 114514
-const getData = async () => {
-  const response = await $fetch<Data>('/api/process', {
-    method: 'POST',
-    body: { data: inputData },
-  })
-  if (response.data) {
-    buttonData.value = response.data
-    console.log(response.data)
-  }
-}
+import Toast from '~/components/data-components/Toast.vue'
+import UnivariateStatistics from '~/components/univariate-statistics/UnivariateStatistics.vue'
 
 const toastRef = ref<InstanceType<typeof Toast> | null>(null)
-
+const pageStatus = ref<InstanceType<typeof SideBar> | null>(null)
 const toastAdd = (message: string, options?: any) => {
   if (toastRef.value?.add) {
     toastRef.value.add(message, options)
@@ -37,7 +21,8 @@ provide('toast', toastAdd)
   <BackGround />
   <Head />
   <div class="context">
-    <SideBar />
+    <SideBar ref="pageStatus" />
+    <UnivariateStatistics :show="pageStatus?.showUnivariateStatistics" />
     <Toast ref="toastRef" />
   </div>
   <Foot />
