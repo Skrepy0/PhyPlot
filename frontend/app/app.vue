@@ -6,6 +6,7 @@ import Foot from '~/components/Foot.vue'
 import Toast from '~/components/data-components/Toast.vue'
 import UnivariateStatistics from '~/components/univariate-statistics/UnivariateStatistics.vue'
 import Dialog from '~/components/data-components/Dialog.vue'
+import DrawChartPage from '~/components/chart/DrawChartPage.vue'
 const dialogRef = ref()
 const toastRef = ref<InstanceType<typeof Toast> | null>(null)
 const pageStatus = ref<InstanceType<typeof SideBar> | null>(null)
@@ -36,6 +37,7 @@ provide('toast', toastAdd)
   <div class="context">
     <SideBar ref="pageStatus" />
     <UnivariateStatistics :show="pageStatus?.showUnivariateStatistics" />
+    <DrawChartPage :show="pageStatus?.showDrawChart"></DrawChartPage>
     <Dialog ref="dialogRef" />
     <Toast ref="toastRef" />
   </div>

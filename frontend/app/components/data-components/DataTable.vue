@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { ref, watch, nextTick, inject } from 'vue'
 import type { DialogOptions } from '~/composables/interface/dialog'
+import type { ToastFunction } from '~/composables/interface/toast'
 
 type SingleRow = { id: number; value: string }
 type DoubleRow = { id: number; x: string; y: string }
 type Row = SingleRow | DoubleRow
 const dialog = inject<(options: DialogOptions) => Promise<boolean>>('dialog')
-const toast = inject<(message: string, options?: any) => void>('toast')
+const toast = inject<ToastFunction>('toast')
 const numberRegex = /^-?\d+(\.\d+)?([eE][-+]?\d+)?$/
 const props = defineProps<{
   variableType: 'single' | 'double'
@@ -165,7 +166,7 @@ const commitAdd = () => {
       y,
     })
 
-    newRowBuffer.value = { x: '0', y: '0' }
+    newRowBuffer.value = { x: '', y: '' }
   }
 
   lastAddedId.value = newId - 1

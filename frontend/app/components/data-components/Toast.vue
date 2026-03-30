@@ -1,14 +1,11 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import type { ToastItem } from '~/composables/interface/toast'
+import type { ToastItem, ToastOptions } from '~/composables/interface/toast'
 
 const toasts = ref<ToastItem[]>([])
 let nextId = 0
 
-const add = (
-  message: string,
-  options?: { type?: ToastItem['type']; duration?: number }
-) => {
+const add = (message: string, options?: ToastOptions) => {
   const { type = 'info', duration = 3000 } = options || {}
   const id = nextId++
   toasts.value.push({ id, message, type, duration })

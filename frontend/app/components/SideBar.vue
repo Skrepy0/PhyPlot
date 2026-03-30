@@ -3,16 +3,32 @@ import { ref } from 'vue'
 
 const showSidebar = ref(false)
 const showUnivariateStatistics = ref(false)
+const showDrawChart = ref(false)
+
+const Pages: Ref[] = [showDrawChart, showUnivariateStatistics]
 
 const hideSidebar = () => {
   showSidebar.value = false
 }
+const showPage = (targetPage: Ref) => {
+  Pages.forEach((page) => {
+    if (page.value && page !== targetPage) {
+      page.value = false
+    }
+  })
+  targetPage.value = true
+}
 const showUS = () => {
-  showUnivariateStatistics.value = true
+  showPage(showUnivariateStatistics)
+  hideSidebar()
+}
+const showDCP = () => {
+  showPage(showDrawChart)
   hideSidebar()
 }
 defineExpose({
   showUnivariateStatistics,
+  showDrawChart,
 })
 </script>
 
@@ -61,6 +77,7 @@ defineExpose({
         class="chart-btn sidebar-btn"
         tooltip="图表"
         data-position="right"
+        @click="showDCP"
       >
         <svg
           class="icon"

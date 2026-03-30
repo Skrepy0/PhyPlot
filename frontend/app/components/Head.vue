@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
-const toast = inject<(message: string, options?: any) => void>('toast')
+import type { ToastFunction } from '~/composables/interface/toast'
+const toast = inject<ToastFunction>('toast')
 onMounted(() => {
   toast?.('欢迎来到PhyPlot', { type: 'success' })
 })

@@ -7,4 +7,13 @@ export default defineNuxtConfig({
       '/api/**': { proxy: 'http://localhost:3001/api/**' },
     },
   },
+  vite: {
+    css: {
+      preprocessorOptions: {
+        scss: {
+          silenceDeprecations: ['import'],
+        },
+      },
+    },
+  },
 })

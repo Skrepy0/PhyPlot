@@ -4,6 +4,7 @@ import DataTable from '~/components/data-components/DataTable.vue'
 import type { SingleResult } from '~/composables/interface/single-result'
 import { solve } from '~/composables/solve-data/single-data'
 import { Decimal } from 'decimal.js'
+import type { ToastFunction } from '~/composables/interface/toast'
 
 const props = defineProps({ show: Boolean })
 
@@ -13,7 +14,7 @@ const errorDistributionOptions = ['均匀分布', '三角分布', '正态分布'
 const selectedErrorDistribution = ref<string>('均匀分布')
 const significantDigits = ref<number>(4)
 const marginError = ref<string>('0')
-const toast = inject<(message: string, options?: any) => void>('toast')
+const toast = inject<ToastFunction>('toast')
 const singleData = ref<{ id: number; value: string }[]>([])
 
 // 所有字段初始化为空字符串
@@ -194,26 +195,12 @@ const submit = async () => {
 </template>
 
 <style scoped lang="scss">
-$bg-dark: #0a0f0c;
-$bg-surface: #141a17;
-$border-green: #2ecc71;
-$text-primary: #e0e0e0;
-$text-secondary: #b0b0b0;
-$accent-green: #27ae60;
-$accent-hover: #2ecc71;
-$input-bg: #1e2522;
-$shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+@use '../../../assets/scss/components/card';
+@import '../../../assets/scss/components/colors';
 
 .us-container {
   width: 100%;
   padding-left: 20px;
-}
-
-.cards-wrapper {
-  display: flex;
-  gap: 24px;
-  width: 100%;
-  padding: 20px 0;
 }
 
 .config-card {
@@ -244,45 +231,11 @@ $shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
   }
 }
 
-.card-title {
-  font-size: 1.5rem;
-  margin-bottom: 16px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid rgba(46, 204, 113, 0.4);
-  color: $accent-green;
-}
-
 .config-data-content {
   display: flex;
   flex-direction: column;
   gap: 16px;
   flex: 1;
-}
-
-.form-row {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.form-label {
-  width: 100px;
-  color: $text-secondary;
-}
-
-.form-select,
-.form-input {
-  flex: 1;
-  background: $input-bg;
-  border: 1px solid rgba(46, 204, 113, 0.3);
-  border-radius: 8px;
-  padding: 8px 12px;
-  color: $text-primary;
-
-  &:focus {
-    border-color: $accent-green;
-    box-shadow: 0 0 0 2px rgba(46, 204, 113, 0.2);
-  }
 }
 
 .table-container {
@@ -312,76 +265,6 @@ $shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
   margin-top: auto;
 }
 
-.results-list {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 16px;
-}
-
-.result-item {
-  background: rgba(30, 37, 34, 0.6);
-  padding: 12px 16px;
-  border-radius: 12px;
-  display: flex;
-  justify-content: space-between;
-  border: 1px solid rgba(46, 204, 113, 0.2);
-  cursor: pointer;
-  &:hover {
-    border-color: $accent-green;
-    transform: translateX(4px);
-    transition: all 0.3s ease;
-  }
-}
-
-.result-label {
-  color: $text-secondary;
-}
-
-.result-value {
-  color: $accent-hover;
-  font-family: monospace;
-  font-size: 1.1rem;
-}
-.submit-btn-container {
-  display: flex;
-  justify-content: center;
-}
-
-.submit-btn {
-  background: linear-gradient(135deg, #2ecc71, #27ae60);
-  border: none;
-  border-radius: 40px;
-  padding: 12px 32px;
-  font-size: 1rem;
-  font-weight: 600;
-  color: white;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-
-  &::before {
-    content: '✓';
-    font-size: 1.2rem;
-    font-weight: bold;
-    transition: transform 0.2s;
-  }
-
-  &:hover {
-    background: linear-gradient(135deg, #27ae60, #1e8f5e);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
-  }
-
-  &:active {
-    transform: translateY(1px);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  }
-}
 .slide-fade-enter-active,
 .slide-fade-leave-active {
   transition: all 0.35s cubic-bezier(0.2, 0.9, 0.4, 1.1);

@@ -10,7 +10,8 @@ import {
   getBUncertainty,
 } from '~/composables/math/uncertainty'
 import { Decimal } from 'decimal.js'
-const toast = inject<(message: string, options?: any) => void>('toast')
+import type { ToastFunction } from '~/composables/interface/toast'
+const toast = inject<ToastFunction>('toast')
 const format = (value: number, digits: number): string => {
   if (isNaN(value)) return '-'
   return value.toFixed(digits)
