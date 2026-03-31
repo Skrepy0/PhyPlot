@@ -72,4 +72,9 @@ const currentYear = new Date().getFullYear()
 .license {
   color: rgba(255, 255, 255, 0.8);
 }
+@media (max-width: 768px) {
+  .footer {
+    width: 110%;
+  }
+}
 </style>

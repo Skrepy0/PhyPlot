@@ -206,6 +206,28 @@ const clearAll = async () => {
 
   toast?.('数据已清空', { type: 'success' })
 }
+
+const downloadData = () => {
+  if (rows.value.length === 0) {
+    toast?.('当前没有数据可下载', { type: 'warning' })
+    return
+  }
+
+  // 处理数据下载逻辑
+  const dataStr = JSON.stringify(rows.value, null, 2)
+  const blob = new Blob([dataStr], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = 'data.json'
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+
+  toast?.('数据已准备好下载', { type: 'success' })
+}
+
 defineExpose({ addRow, deleteRow, resetData })
 </script>
 
@@ -318,6 +340,7 @@ defineExpose({ addRow, deleteRow, resetData })
         </template>
         <button class="add-btn" @click="commitAdd">+ 添加</button>
         <button class="clear-btn" @click="clearAll">清空</button>
+        <button class="download-btn" @click="downloadData">下载数据</button>
       </div>
     </div>
   </div>
@@ -640,7 +663,51 @@ $shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     transform: translateY(0);
   }
 }
+.download-btn {
+  background: transparent;
+  border: 1px solid rgba(46, 204, 113, 0.4);
+  color: $accent-green;
+  border-radius: 8px;
+  padding: 10px 18px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  &:hover {
+    background: rgba(46, 204, 113, 0.1);
+    border-color: $accent-green;
+    color: $accent-green;
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
 /* 响应式设计 */
+@media (max-width: 1024px) {
+  .data-table-container {
+    padding: 18px;
+    border-radius: 18px;
+  }
+
+  .table-wrapper {
+    max-height: 250px;
+  }
+
+  .form-fields {
+    gap: 10px;
+  }
+
+  .form-input {
+    width: auto;
+  }
+}
+
 @media (max-width: 768px) {
   .data-table-container {
     padding: 16px;
@@ -651,19 +718,85 @@ $shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     max-height: 300px;
   }
 
+  .data-table th,
+  .data-table td {
+    padding: 8px 12px;
+    font-size: 0.85rem;
+  }
+
   .form-fields {
+    flex-direction: column;
+    align-items: stretch;
     gap: 8px;
   }
 
-  .form-input,
-  .add-btn {
-    font-size: 0.85rem;
-    padding: 8px 10px;
+  .form-input {
+    width: auto;
+  }
+
+  .add-btn,
+  .clear-btn,
+  .download-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 12px;
+    font-size: 0.9rem;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+    gap: 4px;
   }
 
   .action-btn {
-    padding: 4px 8px;
+    width: 100%;
+    padding: 6px 8px;
     font-size: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .data-table-container {
+    padding: 12px;
+    border-radius: 12px;
+  }
+
+  .table-wrapper {
+    max-height: 200px;
+  }
+
+  .data-table {
+    font-size: 0.8rem;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 6px 8px;
+  }
+
+  .form-title {
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+  }
+
+  .form-fields {
+    gap: 6px;
+  }
+
+  .add-btn,
+  .clear-btn {
+    padding: 10px;
+    font-size: 0.85rem;
+  }
+
+  .action-btn {
+    padding: 4px 6px;
+    font-size: 0.7rem;
+  }
+
+  .empty-placeholder {
+    padding: 20px 10px;
+    font-size: 0.8rem;
   }
 }
 </style>
