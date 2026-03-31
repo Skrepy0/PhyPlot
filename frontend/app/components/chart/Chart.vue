@@ -1,14 +1,16 @@
 <script setup lang="ts">
 import { inject, ref, onMounted } from 'vue'
 import type { ToastFunction, ToastOptions } from '~/composables/interface/toast'
+import type { DoubleResult } from '~/composables/interface/double-result'
+import type { ChartData } from '~/composables/interface/chart-data'
 
 const toast = inject<ToastFunction>('toast')
-
 const imageSrc = ref('')
 const loading = ref(false)
 const error = ref('')
 
-const loadChart = async () => {
+const loadChart = async (data: DoubleResult, config: ChartData) => {
+  console.log(data)
   loading.value = true
   error.value = ''
 

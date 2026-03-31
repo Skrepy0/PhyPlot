@@ -1,14 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
-
-export interface DialogOptions {
-  message: string
-  title?: string
-  confirmText?: string
-  cancelText?: string
-  onConfirm?: () => void | Promise<void>
-  onCancel?: () => void | Promise<void>
-}
+import type { DialogOptions } from '~/composables/interface/dialog'
 
 const isVisible = ref(false)
 let resolvePromise: ((value: boolean) => void) | null = null

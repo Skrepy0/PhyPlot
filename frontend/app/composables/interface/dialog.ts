@@ -3,6 +3,6 @@ export interface DialogOptions {
   title?: string
   confirmText?: string
   cancelText?: string
-  onConfirm?: () => void
-  onCancel?: () => void
+  onConfirm?: () => void | Promise<void>
+  onCancel?: () => void | Promise<void>
 }
