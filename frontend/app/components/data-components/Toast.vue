@@ -37,18 +37,11 @@ const getIcon = (type: string) => {
 <template>
   <div class="toast-container">
     <TransitionGroup name="toast">
-      <div
-        v-for="toast in toasts"
-        :key="toast.id"
-        :class="['toast', toast.type]"
-      >
+      <div v-for="toast in toasts" :key="toast.id" :class="['toast', toast.type]">
         <span class="toast-icon">{{ getIcon(toast.type || 'info') }}</span>
         <div class="toast-content">
           <span class="toast-message">{{ toast.message }}</span>
-          <div
-            class="progress"
-            :style="{ animationDuration: (toast.duration || 3000) + 'ms' }"
-          ></div>
+          <div class="progress" :style="{ animationDuration: (toast.duration || 3000) + 'ms' }"></div>
         </div>
       </div>
     </TransitionGroup>

@@ -37,7 +37,7 @@ const results = ref<DoubleResult>({
 })
 
 const submit = () => {
-  solve(results)
+  solve(results, configData, lineData.value)
   if (chartRef.value) {
     chartRef.value.loadChart(results.value, configData.value)
     console.log('图表已刷新')
@@ -65,10 +65,7 @@ const submit = () => {
 
                   <div class="form-row">
                     <label class="form-label">拟合方式</label>
-                    <select
-                      v-model="configData.draftingMethod"
-                      class="form-select"
-                    >
+                    <select v-model="configData.draftingMethod" class="form-select">
                       <option v-for="opt in draftingMethodOptions" :key="opt">
                         {{ opt }}
                       </option>
@@ -86,14 +83,8 @@ const submit = () => {
 
                   <div class="form-row">
                     <label class="form-label">误差分布</label>
-                    <select
-                      v-model="configData.errorDistribution"
-                      class="form-select"
-                    >
-                      <option
-                        v-for="opt in errorDistributionOptions"
-                        :key="opt"
-                      >
+                    <select v-model="configData.errorDistribution" class="form-select">
+                      <option v-for="opt in errorDistributionOptions" :key="opt">
                         {{ opt }}
                       </option>
                     </select>
@@ -101,22 +92,14 @@ const submit = () => {
 
                   <div class="form-row">
                     <label class="form-label">误差限</label>
-                    <input
-                      type="number"
-                      v-model.number="configData.marginError"
-                      class="form-input"
-                    />
+                    <input type="number" v-model.number="configData.marginError" class="form-input" />
                   </div>
                 </div>
 
                 <div class="right-config">
                   <div class="form-row">
                     <label class="form-label">有效数字</label>
-                    <input
-                      type="number"
-                      v-model.number="configData.significantDigits"
-                      class="form-input"
-                    />
+                    <input type="number" v-model.number="configData.significantDigits" class="form-input" />
                   </div>
 
                   <div class="form-row">
@@ -131,18 +114,12 @@ const submit = () => {
 
                   <div class="form-row">
                     <label class="form-label">点图例</label>
-                    <input
-                      class="form-input"
-                      v-model="configData.pointCutline"
-                    />
+                    <input class="form-input" v-model="configData.pointCutline" />
                   </div>
 
                   <div class="form-row">
                     <label class="form-label">线图例</label>
-                    <input
-                      class="form-input"
-                      v-model="configData.lineCutline"
-                    />
+                    <input class="form-input" v-model="configData.lineCutline" />
                   </div>
                 </div>
               </div>
@@ -215,7 +192,6 @@ const submit = () => {
   padding: 16px;
 }
 
-/* ===== 主布局 ===== */
 .cards-wrapper {
   display: flex;
   gap: 16px;

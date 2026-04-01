@@ -24,8 +24,7 @@ const loadChart = async (data: DoubleResult, config: ChartData) => {
     imageSrc.value = image
     toast?.('图表加载成功', { type: 'success' })
   } catch (err) {
-    const message =
-      err instanceof Error ? err.message : '图表加载失败，请稍后重试'
+    const message = err instanceof Error ? err.message : '图表加载失败，请稍后重试'
     error.value = message
     toast?.(message, { type: 'error' })
   } finally {
@@ -81,33 +80,16 @@ defineExpose({ loadChart })
         </div>
 
         <Transition name="fade" v-else>
-          <img
-            v-if="imageSrc"
-            :src="imageSrc"
-            alt="统计图表"
-            class="chart-img"
-          />
+          <img v-if="imageSrc" :src="imageSrc" alt="统计图表" class="chart-img" />
         </Transition>
       </div>
 
       <div class="chart-footer">
-        <button
-          v-if="imageSrc && !loading"
-          class="action-btn download-btn"
-          @click="downloadChart"
-          title="下载图表"
-          aria-label="下载图表"
-        >
+        <button v-if="imageSrc && !loading" class="action-btn download-btn" @click="downloadChart" title="下载图表" aria-label="下载图表">
           <span class="btn-icon">⬇</span>
           <span class="btn-text">下载</span>
         </button>
-        <button
-          class="action-btn reload-btn"
-          @click="loadChart"
-          :disabled="loading"
-          title="重新加载"
-          aria-label="重新加载图表"
-        >
+        <button class="action-btn reload-btn" @click="loadChart" :disabled="loading" title="重新加载" aria-label="重新加载图表">
           <span class="btn-icon">🔄</span>
           <span class="btn-text">{{ loading ? '加载中...' : '刷新' }}</span>
         </button>
@@ -151,11 +133,7 @@ defineExpose({ loadChart })
   align-items: center;
   padding: 0 20px;
   border-bottom: 1px solid rgba(46, 204, 113, 0.1);
-  background: linear-gradient(
-    135deg,
-    rgba(46, 204, 113, 0.05),
-    rgba(39, 174, 96, 0.02)
-  );
+  background: linear-gradient(135deg, rgba(46, 204, 113, 0.05), rgba(39, 174, 96, 0.02));
 }
 
 .chart-footer {
@@ -178,11 +156,7 @@ defineExpose({ loadChart })
   align-items: center;
   gap: 6px;
   padding: 8px 16px;
-  background: linear-gradient(
-    135deg,
-    rgba(46, 204, 113, 0.15),
-    rgba(39, 174, 96, 0.1)
-  );
+  background: linear-gradient(135deg, rgba(46, 204, 113, 0.15), rgba(39, 174, 96, 0.1));
   color: rgba(46, 204, 113, 0.9);
   border: 1px solid rgba(46, 204, 113, 0.3);
   border-radius: 8px;
@@ -192,11 +166,7 @@ defineExpose({ loadChart })
   transition: all 0.3s ease;
 
   &:hover:not(:disabled) {
-    background: linear-gradient(
-      135deg,
-      rgba(46, 204, 113, 0.3),
-      rgba(39, 174, 96, 0.2)
-    );
+    background: linear-gradient(135deg, rgba(46, 204, 113, 0.3), rgba(39, 174, 96, 0.2));
     border-color: rgba(46, 204, 113, 0.6);
     color: rgba(46, 204, 113, 1);
     transform: translateY(-2px);
@@ -215,22 +185,14 @@ defineExpose({ loadChart })
 
 .download-btn {
   &:hover {
-    background: linear-gradient(
-      135deg,
-      rgba(46, 204, 113, 0.4),
-      rgba(39, 174, 96, 0.3)
-    );
+    background: linear-gradient(135deg, rgba(46, 204, 113, 0.4), rgba(39, 174, 96, 0.3));
     box-shadow: 0 6px 16px rgba(46, 204, 113, 0.3);
   }
 }
 
 .reload-btn {
   &:hover:not(:disabled) {
-    background: linear-gradient(
-      135deg,
-      rgba(100, 200, 150, 0.3),
-      rgba(80, 180, 130, 0.2)
-    );
+    background: linear-gradient(135deg, rgba(100, 200, 150, 0.3), rgba(80, 180, 130, 0.2));
   }
 }
 
@@ -340,11 +302,7 @@ defineExpose({ loadChart })
 
 .retry-btn {
   padding: 10px 24px;
-  background: linear-gradient(
-    135deg,
-    rgba(46, 204, 113, 0.8),
-    rgba(39, 174, 96, 0.8)
-  );
+  background: linear-gradient(135deg, rgba(46, 204, 113, 0.8), rgba(39, 174, 96, 0.8));
   color: white;
   border: none;
   border-radius: 8px;
@@ -354,11 +312,7 @@ defineExpose({ loadChart })
   transition: all 0.3s ease;
 
   &:hover {
-    background: linear-gradient(
-      135deg,
-      rgba(46, 204, 113, 1),
-      rgba(39, 174, 96, 1)
-    );
+    background: linear-gradient(135deg, rgba(46, 204, 113, 1), rgba(39, 174, 96, 1));
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(46, 204, 113, 0.4);
   }

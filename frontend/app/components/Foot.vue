@@ -2,25 +2,12 @@
   <footer class="footer">
     <div class="footer-content">
       <div class="copyright">
-        © {{ currentYear }} Skrepy.
-        <a class="license" href="https://mit-license.org/" target="_blank"
-          >MIT</a
-        >.
+        © {{ currentYear }} Skrepy. <a class="license" href="https://mit-license.org/" target="_blank">MIT</a>.
         <br />
         由 Skrepy 使用
-        <a
-          target="_blank"
-          style="color: #419972"
-          href="https://github.com/vuejs/core"
-          >Vue.js</a
-        >
+        <a target="_blank" style="color: #419972" href="https://github.com/vuejs/core">Vue.js</a>
         和
-        <a
-          target="_blank"
-          style="color: #00dc82"
-          href="https://github.com/nuxt/nuxt"
-          >Nuxt</a
-        >
+        <a target="_blank" style="color: #00dc82" href="https://github.com/nuxt/nuxt">Nuxt</a>
         编写✏️<br />
       </div>
     </div>

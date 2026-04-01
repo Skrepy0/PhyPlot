@@ -21,8 +21,7 @@ const emit = defineEmits<{
 const normalizeRows = (input: any[]): Row[] => {
   if (!Array.isArray(input)) return []
   return input.map((item) => {
-    const id =
-      typeof item.id === 'string' ? parseInt(item.id, 10) : (item.id as number)
+    const id = typeof item.id === 'string' ? parseInt(item.id, 10) : (item.id as number)
     if (props.variableType === 'single') {
       return { id, value: item.value !== undefined ? String(item.value) : '0' }
     } else {
@@ -126,9 +125,7 @@ const cancelEdit = () => {
   editBuffer.value = {}
 }
 
-const newRowBuffer = ref(
-  props.variableType === 'single' ? { value: '' } : { x: '', y: '' }
-)
+const newRowBuffer = ref(props.variableType === 'single' ? { value: '' } : { x: '', y: '' })
 const isValidNumber = (val: string) => {
   return numberRegex.test(val.trim())
 }
@@ -201,8 +198,7 @@ const clearAll = async () => {
   rows.value = []
   nextId = 1
 
-  newRowBuffer.value =
-    props.variableType === 'single' ? { value: '' } : { x: '', y: '' }
+  newRowBuffer.value = props.variableType === 'single' ? { value: '' } : { x: '', y: '' }
 
   toast?.('数据已清空', { type: 'success' })
 }
@@ -244,21 +240,11 @@ defineExpose({ addRow, deleteRow, resetData })
           </tr>
         </thead>
         <tbody>
-          <tr
-            v-for="(row, index) in rows"
-            :key="row.id"
-            :class="{ 'new-row': lastAddedId === row.id }"
-          >
+          <tr v-for="(row, index) in rows" :key="row.id" :class="{ 'new-row': lastAddedId === row.id }">
             <td>{{ index + 1 }}</td>
             <td>
               <template v-if="editingId === row.id">
-                <input
-                  type="text"
-                  :value="getX(row)"
-                  @input="setX"
-                  class="edit-input"
-                  @keydown.enter="saveEdit(row.id)"
-                />
+                <input type="text" :value="getX(row)" @input="setX" class="edit-input" @keydown.enter="saveEdit(row.id)" />
               </template>
               <template v-else>
                 {{ getX(row) }}
@@ -266,13 +252,7 @@ defineExpose({ addRow, deleteRow, resetData })
             </td>
             <td v-if="variableType === 'double'">
               <template v-if="editingId === row.id">
-                <input
-                  type="text"
-                  :value="getY(row)"
-                  @input="setY"
-                  class="edit-input"
-                  @keydown.enter="saveEdit(row.id)"
-                />
+                <input type="text" :value="getY(row)" @input="setY" class="edit-input" @keydown.enter="saveEdit(row.id)" />
               </template>
               <template v-else>
                 {{ getY(row) }}
@@ -280,33 +260,17 @@ defineExpose({ addRow, deleteRow, resetData })
             </td>
             <td class="action-buttons">
               <template v-if="editingId === row.id">
-                <button class="action-btn save-btn" @click="saveEdit(row.id)">
-                  保存
-                </button>
-                <button class="action-btn cancel-btn" @click="cancelEdit">
-                  取消
-                </button>
+                <button class="action-btn save-btn" @click="saveEdit(row.id)">保存</button>
+                <button class="action-btn cancel-btn" @click="cancelEdit">取消</button>
               </template>
               <template v-else>
-                <button class="action-btn edit-btn" @click="startEdit(row)">
-                  编辑
-                </button>
-                <button
-                  class="action-btn delete-btn"
-                  @click="deleteRow(row.id)"
-                >
-                  删除
-                </button>
+                <button class="action-btn edit-btn" @click="startEdit(row)">编辑</button>
+                <button class="action-btn delete-btn" @click="deleteRow(row.id)">删除</button>
               </template>
             </td>
           </tr>
           <tr v-if="rows.length === 0">
-            <td
-              :colspan="variableType === 'double' ? 4 : 3"
-              class="empty-placeholder"
-            >
-              暂无数据，请添加
-            </td>
+            <td :colspan="variableType === 'double' ? 4 : 3" class="empty-placeholder">暂无数据，请添加</td>
           </tr>
         </tbody>
       </table>
@@ -324,19 +288,8 @@ defineExpose({ addRow, deleteRow, resetData })
           @keydown.enter="commitAdd"
         />
         <template v-else>
-          <input
-            type="text"
-            v-model="newRowBuffer.x"
-            placeholder="X"
-            class="form-input"
-          />
-          <input
-            type="text"
-            v-model="newRowBuffer.y"
-            placeholder="Y"
-            class="form-input"
-            @keydown.enter="commitAdd"
-          />
+          <input type="text" v-model="newRowBuffer.x" placeholder="X" class="form-input" />
+          <input type="text" v-model="newRowBuffer.y" placeholder="Y" class="form-input" @keydown.enter="commitAdd" />
         </template>
         <button class="add-btn" @click="commitAdd">+ 添加</button>
         <button class="clear-btn" @click="clearAll">清空</button>

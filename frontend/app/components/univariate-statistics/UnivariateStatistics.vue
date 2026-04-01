@@ -91,33 +91,19 @@ const submit = async () => {
             </div>
             <div class="form-row">
               <label class="form-label">误差限</label>
-              <input
-                type="number"
-                v-model.number="marginError"
-                class="form-input"
-                min="1"
-                max="10"
-              />
+              <input type="number" v-model.number="marginError" class="form-input" min="1" max="10" />
             </div>
 
             <div class="form-row">
               <label class="form-label">有效数字</label>
-              <input
-                type="number"
-                v-model.number="significantDigits"
-                class="form-input"
-                min="1"
-                max="16"
-              />
+              <input type="number" v-model.number="significantDigits" class="form-input" min="1" max="16" />
             </div>
 
             <!-- 表格区域（核心优化） -->
 
             <DataTable v-model="singleData" variable-type="single" />
             <div class="submit-btn-container">
-              <button type="submit" class="submit-btn" @click="submit">
-                开始统计
-              </button>
+              <button type="submit" class="submit-btn" @click="submit">开始统计</button>
             </div>
           </div>
         </div>
@@ -163,19 +149,13 @@ const submit = async () => {
                 {{ results.meanStdDev || '-' }}
               </span>
             </div>
-            <div
-              class="result-item"
-              @click="copyValue(results.uncertainty.at(0) || '-')"
-            >
+            <div class="result-item" @click="copyValue(results.uncertainty.at(0) || '-')">
               <span class="result-label">A类不确定度</span>
               <span class="result-value">
                 {{ results.uncertainty.at(0) || '-' }}
               </span>
             </div>
-            <div
-              class="result-item"
-              @click="copyValue(results.uncertainty.at(1) || '-')"
-            >
+            <div class="result-item" @click="copyValue(results.uncertainty.at(1) || '-')">
               <span class="result-label">B类不确定度</span>
               <span class="result-value">
                 {{ results.uncertainty.at(1) || '-' }}

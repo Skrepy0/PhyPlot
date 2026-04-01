@@ -4,11 +4,7 @@ export const getAUncertainty = (mean_std_dev: string, p: string, n: string) => {
   return new Decimal(mean_std_dev).plus(getTFactor(n, p)).toNumber()
 }
 
-export const getBUncertainty = (
-  marginError: string,
-  mode: string,
-  p: string
-): number => {
+export const getBUncertainty = (marginError: string, mode: string, p: string): number => {
   let k: Decimal = new Decimal(1)
   switch (mode) {
     case '均匀分布':
