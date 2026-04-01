@@ -1,4 +1,5 @@
 @import 'colors';
+
 .card-title {
   font-size: 1.5rem;
   margin-bottom: 16px;
@@ -6,12 +7,14 @@
   border-bottom: 1px solid rgba(46, 204, 113, 0.4);
   color: $accent-green;
 }
+
 .cards-wrapper {
   display: flex;
   gap: 24px;
   width: 100%;
   padding: 20px 0;
 }
+
 .form-row {
   display: flex;
   align-items: center;
@@ -22,6 +25,7 @@
   width: 100px;
   color: $text-secondary;
 }
+
 .form-select,
 .form-input {
   flex: 1;
@@ -36,12 +40,15 @@
     box-shadow: 0 0 0 2px rgba(46, 204, 113, 0.2);
   }
 }
+
 .results-list {
   flex: 1;
   display: flex;
   flex-direction: column;
   justify-content: center;
   gap: 16px;
+  min-width: 0; // 允许收缩
+  overflow: hidden; // 防止内部溢出
 }
 
 .result-item {
@@ -52,6 +59,10 @@
   justify-content: space-between;
   border: 1px solid rgba(46, 204, 113, 0.2);
   cursor: pointer;
+  gap: 8px; // 增加间距，避免内容紧贴
+  // 关键：防止 flex 子项溢出
+  min-width: 0; // 允许 flex 子项收缩
+  overflow: visible;
   &:hover {
     border-color: $accent-green;
     transform: translateX(4px);
@@ -61,17 +72,45 @@
 
 .result-label {
   color: $text-secondary;
+  flex-shrink: 0; // 标签不缩小
+  white-space: nowrap; // 标签保持单行
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .result-value {
-  color: $accent-hover;
-  font-family: monospace;
-  font-size: 1.1rem;
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  &:hover::after {
+    content: attr(data-fulltext);
+    position: absolute;
+    bottom: 100%;
+    right: 0;
+    transform: translateY(-8px);
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(8px);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 10;
+    pointer-events: none;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
 }
+
 .submit-btn-container {
   display: flex;
   justify-content: center;
 }
+
 .submit-btn {
   background: linear-gradient(135deg, #2ecc71, #27ae60);
   border: none;

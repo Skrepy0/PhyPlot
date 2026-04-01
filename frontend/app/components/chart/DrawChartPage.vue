@@ -2,10 +2,11 @@
 import DataTable from '~/components/data-components/DataTable.vue'
 import { inject, ref } from 'vue'
 import Chart from '~/components/chart/Chart.vue'
+import { solve } from '~/composables/solve-data/double-data'
+import { copy } from '~/composables/tools'
 import type { ToastFunction } from '~/composables/interface/toast'
 import type { ChartData } from '~/composables/interface/chart-data'
 import type { DoubleResult } from '~/composables/interface/double-result'
-import { solve } from '~/composables/solve-data/double-data'
 const props = defineProps({
   show: Boolean,
 })
@@ -35,7 +36,9 @@ const results = ref<DoubleResult>({
   mStdErr: '',
   corr: '',
 })
-
+const copyValue = async (val: string | number): Promise<void> => {
+  copy(val, toast)
+}
 const submit = () => {
   solve(results, configData, lineData.value)
   if (chartRef.value) {
@@ -98,7 +101,7 @@ const submit = () => {
 
                 <div class="right-config">
                   <div class="form-row">
-                    <label class="form-label">有效数字</label>
+                    <label class="form-label">小数位数</label>
                     <input type="number" v-model.number="configData.significantDigits" class="form-input" />
                   </div>
 
@@ -144,32 +147,32 @@ const submit = () => {
 
             <div class="results-container">
               <div class="results-list">
-                <div class="result-item">
-                  <span>斜率k</span>
-                  <span>{{ results.k || '-' }}</span>
+                <div class="result-item" @click="copyValue(results.k)">
+                  <span class="result-label">斜率k</span>
+                  <span class="result-value" :title="results.k">{{ results.k || '-' }}</span>
                 </div>
-                <div class="result-item">
-                  <span>截距m</span>
-                  <span>{{ results.m || '-' }}</span>
+                <div class="result-item" @click="copyValue(results.m)">
+                  <span class="result-label">截距m</span>
+                  <span class="result-value" :title="results.m">{{ results.m || '-' }}</span>
                 </div>
-                <div class="result-item">
-                  <span>y标准误差</span>
-                  <span>{{ results.yStdErr || '-' }}</span>
+                <div class="result-item" @click="copyValue(results.yStdErr)">
+                  <span class="result-label">y标准误差</span>
+                  <span class="result-value" :title="results.yStdErr">{{ results.yStdErr || '-' }}</span>
                 </div>
               </div>
 
               <div class="results-list">
-                <div class="result-item">
-                  <span>k误差</span>
-                  <span>{{ results.kStdErr || '-' }}</span>
+                <div class="result-item" @click="copyValue(results.kStdErr)">
+                  <span class="result-label">k误差</span>
+                  <span class="result-value" :title="results.kStdErr">{{ results.kStdErr || '-' }}</span>
                 </div>
-                <div class="result-item">
-                  <span>m误差</span>
-                  <span>{{ results.mStdErr || '-' }}</span>
+                <div class="result-item" @click="copyValue(results.mStdErr)">
+                  <span class="result-label">m误差</span>
+                  <span class="result-value" :title="results.mStdErr">{{ results.mStdErr || '-' }}</span>
                 </div>
-                <div class="result-item">
-                  <span>相关系数</span>
-                  <span>{{ results.corr || '-' }}</span>
+                <div class="result-item" @click="copyValue(results.corr)">
+                  <span class="result-label">相关系数</span>
+                  <span class="result-value" :title="results.corr">{{ results.corr || '-' }}</span>
                 </div>
               </div>
             </div>
@@ -240,6 +243,7 @@ const submit = () => {
 
 /* ===== 右侧结果 ===== */
 .result-box {
+  overflow-x: auto;
   background: rgba(10, 15, 12, 0.92);
   backdrop-filter: blur(12px);
   border-radius: 15px;
@@ -274,6 +278,8 @@ const submit = () => {
 
 /* ===== 结果区 ===== */
 .results-container {
+  overflow-y: auto;
+  overflow-x: auto;
   display: flex;
   gap: 12px;
 }

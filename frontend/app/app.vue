@@ -28,6 +28,7 @@ const showDialog = (options: {
 }) => {
   return dialogRef.value.show(options)
 }
+true
 provide('dialog', showDialog)
 provide('toast', toastAdd)
 </script>

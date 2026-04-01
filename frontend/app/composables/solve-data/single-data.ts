@@ -8,11 +8,9 @@ import { meanStdDev } from '~/composables/math/mean-std-dev'
 import { getAUncertainty, getBUncertainty } from '~/composables/math/uncertainty'
 import { Decimal } from 'decimal.js'
 import type { ToastFunction } from '~/composables/interface/toast'
+import { format } from '~/composables/tools'
+
 const toast = inject<ToastFunction>('toast')
-const format = (value: number, digits: number): string => {
-  if (isNaN(value)) return '-'
-  return value.toFixed(digits)
-}
 
 export const solve = async (
   res: Ref<SingleResult>,
@@ -23,15 +21,15 @@ export const solve = async (
   significantDigits: number
 ) => {
   const dataList = data.map((item) => item.value)
-  const count = dataList.length
+  const count = dataList.length.toString()
   const mean = await average(dataList, count)
-  const vari = await variance(dataList, mean, count)
+  const vari = await variance(dataList, count, mean)
   const std_err = await stdErr(vari)
   const std_dev = await stdDev(std_err, count)
   const mean_std_dev = await meanStdDev(std_dev, count)
-  const uncertainty_a = getAUncertainty(String(mean_std_dev), confidence, String(count))
-  const uncertainty_b = getBUncertainty(marginError, errorDistribution, confidence)
-  const stdUncertainty = new Decimal(uncertainty_a).pow(2).add(new Decimal(uncertainty_b).pow(2)).sqrt().toNumber()
+  const uncertainty_a = await getAUncertainty(String(mean_std_dev), confidence, String(count))
+  const uncertainty_b = await getBUncertainty(marginError, errorDistribution, confidence)
+  const stdUncertainty = new Decimal(uncertainty_a).pow(2).add(new Decimal(uncertainty_b).pow(2)).sqrt().toString()
 
   res.value = {
     count: format(count, 0),

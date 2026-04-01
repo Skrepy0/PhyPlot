@@ -8,20 +8,26 @@ export const getK = async (points: { x: string; y: string }[]): Promise<string> 
   let averX = new Decimal(
     await getAveDec(
       points.map((i) => i.x),
-      pointList.length
+      pointList.length.toString()
     )
   )
   let averY = new Decimal(
     await getAveDec(
       points.map((i) => i.y),
-      pointList.length
+      pointList.length.toString()
     )
   )
-  let molecule = new Decimal(0)
-  let denominator = new Decimal(0)
-  pointList.forEach((point) => {
-    molecule = molecule.add(point.x.minus(averX).times(point.y.minus(averY)))
-    denominator = denominator.add(point.x.minus(averX).pow(2))
-  })
-  return molecule.div(denominator).toString()
+  let averXSquare = new Decimal(
+    await getAveDec(
+      pointList.map((i) => i.x.pow(2).toString()),
+      pointList.length.toString()
+    )
+  )
+  let averXY = new Decimal(
+    await getAveDec(
+      pointList.map((i) => i.x.times(i.y).toString()),
+      pointList.length.toString()
+    )
+  )
+  return averX.times(averY).minus(averXY).div(averX.pow(2).minus(averXSquare)).toString()
 }

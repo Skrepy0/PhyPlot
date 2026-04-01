@@ -31,11 +31,13 @@ def process_data():
 from flask import jsonify
 
 
-@app.route('/api/chart', methods=['GET'])
+@app.route('/api/chart', methods=['POST'])
 def get_chart():
+    response = request.get_json()
+    print(response)
     plt.figure()
     plt.plot([1, 2, 3, 4], [1, 4, 2, 3])
-    plt.title('我的图表')
+    plt.title(response["config"]["chartTitle"])
     img = BytesIO()
     plt.savefig(img, format='png')
     img.seek(0)

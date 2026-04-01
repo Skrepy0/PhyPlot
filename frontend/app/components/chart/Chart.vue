@@ -3,6 +3,7 @@ import { inject, ref, onMounted } from 'vue'
 import type { ToastFunction, ToastOptions } from '~/composables/interface/toast'
 import type { DoubleResult } from '~/composables/interface/double-result'
 import type { ChartData } from '~/composables/interface/chart-data'
+import type { Communicate } from '~/composables/interface/communicate'
 
 const toast = inject<ToastFunction>('toast')
 const imageSrc = ref('')
@@ -15,7 +16,17 @@ const loadChart = async (data: DoubleResult, config: ChartData) => {
   error.value = ''
 
   try {
-    const response = await fetch('/api/chart')
+    const body: Communicate = {
+      config: config,
+      data: data,
+    }
+    const response = await fetch('/api/chart', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    })
     if (!response.ok) throw new Error(`HTTP ${response.status}`)
 
     const { image } = await response.json()

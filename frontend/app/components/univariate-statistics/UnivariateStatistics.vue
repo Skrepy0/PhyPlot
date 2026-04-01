@@ -4,6 +4,7 @@ import DataTable from '~/components/data-components/DataTable.vue'
 import type { SingleResult } from '~/composables/interface/single-result'
 import { solve } from '~/composables/solve-data/single-data'
 import { Decimal } from 'decimal.js'
+import { copy } from '~/composables/tools'
 import type { ToastFunction } from '~/composables/interface/toast'
 
 const props = defineProps({ show: Boolean })
@@ -29,14 +30,7 @@ const results = ref<SingleResult>({
   stdUncertainty: '',
   confidenceInterval: ['', ''],
 })
-const copyValue = async (val: string | number) => {
-  try {
-    await navigator.clipboard.writeText(String(val))
-    toast?.(`已复制 ${val}`, { type: 'success' })
-  } catch (err) {
-    toast?.('复制失败', { type: 'error' })
-  }
-}
+
 const submit = async () => {
   if (singleData.value.length === 0) {
     toast?.('请输入数据点', { type: 'error' })
@@ -52,14 +46,10 @@ const submit = async () => {
   if ([1, 11, 13, 14, 16, 17, 18, 19].includes(singleData.value.length)) {
     toast?.('t因子表中无此次样本数量！', { type: 'warning' })
   }
-  await solve(
-    results,
-    singleData.value,
-    p,
-    marginError.value,
-    selectedErrorDistribution.value,
-    significantDigits.value // 传入有效数字位数
-  )
+  await solve(results, singleData.value, p, marginError.value, selectedErrorDistribution.value, significantDigits.value)
+}
+const copyValue = async (val: string | number): Promise<void> => {
+  copy(val, toast)
 }
 </script>
 
@@ -95,7 +85,7 @@ const submit = async () => {
             </div>
 
             <div class="form-row">
-              <label class="form-label">有效数字</label>
+              <label class="form-label">小数位数</label>
               <input type="number" v-model.number="significantDigits" class="form-input" min="1" max="16" />
             </div>
 

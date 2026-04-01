@@ -1,10 +1,10 @@
 import { Decimal } from 'decimal.js'
 import { getTFactor } from '~/composables/math/t-factor'
-export const getAUncertainty = (mean_std_dev: string, p: string, n: string) => {
-  return new Decimal(mean_std_dev).plus(getTFactor(n, p)).toNumber()
+export const getAUncertainty = async (mean_std_dev: string, p: string, n: string) => {
+  return new Decimal(mean_std_dev).plus(getTFactor(n, p)).toString()
 }
 
-export const getBUncertainty = (marginError: string, mode: string, p: string): number => {
+export const getBUncertainty = async (marginError: string, mode: string, p: string): Promise<string> => {
   let k: Decimal = new Decimal(1)
   switch (mode) {
     case '均匀分布':
@@ -17,7 +17,7 @@ export const getBUncertainty = (marginError: string, mode: string, p: string): n
       k = new Decimal(getK(p))
       break
   }
-  return new Decimal(marginError).div(k).toNumber()
+  return new Decimal(marginError).div(k).toString()
 }
 
 function getK(p: string): string {
