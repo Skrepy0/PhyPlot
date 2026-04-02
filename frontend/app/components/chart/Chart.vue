@@ -10,7 +10,7 @@ const imageSrc = ref('')
 const loading = ref(false)
 const error = ref('')
 
-const loadChart = async (data: DoubleResult, config: ChartData) => {
+const loadChart = async (data: DoubleResult, config: ChartData, points: { id: number; x: string; y: string }[]) => {
   console.log(data)
   loading.value = true
   error.value = ''
@@ -19,6 +19,7 @@ const loadChart = async (data: DoubleResult, config: ChartData) => {
     const body: Communicate = {
       config: config,
       data: data,
+      points: points,
     }
     const response = await fetch('/api/chart', {
       method: 'POST',

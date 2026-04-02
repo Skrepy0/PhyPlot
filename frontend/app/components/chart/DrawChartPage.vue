@@ -39,10 +39,10 @@ const results = ref<DoubleResult>({
 const copyValue = async (val: string | number): Promise<void> => {
   copy(val, toast)
 }
-const submit = () => {
-  solve(results, configData, lineData.value)
+const submit = async () => {
+  await solve(results, configData, lineData.value)
   if (chartRef.value) {
-    chartRef.value.loadChart(results.value, configData.value)
+    chartRef.value.loadChart(results.value, configData.value, lineData.value)
     console.log('图表已刷新')
   }
 }

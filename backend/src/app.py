@@ -1,15 +1,8 @@
 from flask import Flask, request
 from flask_cors import CORS
 import os
-from io import BytesIO
-import base64
-import matplotlib
+from models.chart import Chart
 
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
-
-plt.rcParams['font.sans-serif'] = ['SimHei', 'Microsoft YaHei', 'DejaVu Sans']
-plt.rcParams['axes.unicode_minus'] = False
 
 app = Flask(__name__)
 CORS(app)
@@ -34,15 +27,25 @@ from flask import jsonify
 @app.route('/api/chart', methods=['POST'])
 def get_chart():
     response = request.get_json()
-    print(response)
-    plt.figure()
-    plt.plot([1, 2, 3, 4], [1, 4, 2, 3])
-    plt.title(response["config"]["chartTitle"])
-    img = BytesIO()
-    plt.savefig(img, format='png')
-    img.seek(0)
-    plot_url = base64.b64encode(img.getvalue()).decode('utf8')
-    plt.close()
+    app.logger.info(response)
+    data = response["data"]
+    config = response["config"]
+    chart = Chart(
+    k=float(data["k"]),
+    m=float(data["m"]),
+    k_error=float(data["kStdErr"]),
+    m_error=float(data["mStdErr"]),
+    corr=float(data["corr"]),
+    confidence=float(config["confidence"].split("%")[0])/100,
+    title=config["chartTitle"],
+    x_label=config["xName"],
+    y_label=config["yName"],
+    point_legend=config["pointCutline"],
+    line_legend = config["lineCutline"]
+    )
+
+    chart.load_from_frontend(response["points"])
+    plot_url = chart.to_base64()
     return jsonify({'image': 'data:image/png;base64,' + plot_url})
 
 
