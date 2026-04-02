@@ -235,11 +235,12 @@ const copyValue = async (val: string | number): Promise<void> => {
   margin-top: auto;
 }
 
-.slide-fade-enter-active,
 .slide-fade-leave-active {
   transition: all 0.35s cubic-bezier(0.2, 0.9, 0.4, 1.1);
 }
-
+.slide-fade-enter-active {
+  transition: all 0.35s cubic-bezier(0.2, 0.9, 0.4, 1.1) 0.5s;
+}
 .slide-fade-enter-from,
 .slide-fade-leave-to {
   transform: translateX(-100%);

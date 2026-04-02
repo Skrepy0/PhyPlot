@@ -4,12 +4,25 @@ export const stdErr = async (vari: string): Promise<string> => {
   return new Decimal(vari).pow(0.5).toString()
 }
 export const getYStdErr = async (points: { x: string; y: string }[], k: string, m: string): Promise<string> => {
-  let pointList = points.map((point) => {
-    return { x: new Decimal(point.x), y: new Decimal(point.y) }
-  })
-  let sum = pointList.reduce((acc, cur) => acc.add(cur.y.minus(new Decimal(k).times(cur.x)).minus(m)), new Decimal(0))
+  const pointList = points.map((p) => ({
+    x: new Decimal(p.x),
+    y: new Decimal(p.y),
+  }))
+
+  const K = new Decimal(k)
+  const M = new Decimal(m)
+
+  const n = pointList.length
+  if (n <= 2) return 'NaN'
+
+  const sum = pointList.reduce((acc, cur) => {
+    const yHat = K.times(cur.x).plus(M)
+    const residual = cur.y.minus(yHat)
+    return acc.plus(residual.pow(2))
+  }, new Decimal(0))
+
   return sum
-    .div(points.length - 2)
+    .div(n - 2)
     .sqrt()
     .toString()
 }

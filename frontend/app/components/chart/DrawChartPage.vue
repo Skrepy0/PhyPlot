@@ -49,7 +49,7 @@ const submit = async () => {
 </script>
 
 <template>
-  <Transition name="slide-fade">
+  <Transition name="fade-up">
     <div v-if="props.show" class="draw-chart-page">
       <div class="cards-wrapper">
         <!-- 左侧：配置 -->
@@ -327,5 +327,18 @@ const submit = async () => {
   .chart-result {
     height: 260px;
   }
+}
+.fade-up-enter-active {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) 0.5s;
+}
+
+.fade-up-leave-active {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.fade-up-enter-from,
+.fade-up-leave-to {
+  opacity: 0;
+  transform: translateY(20px);
 }
 </style>

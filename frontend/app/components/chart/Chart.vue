@@ -4,22 +4,54 @@ import type { ToastFunction, ToastOptions } from '~/composables/interface/toast'
 import type { DoubleResult } from '~/composables/interface/double-result'
 import type { ChartData } from '~/composables/interface/chart-data'
 import type { Communicate } from '~/composables/interface/communicate'
+import { fromScientific } from '~/composables/tools'
+import type { ChartSettings } from '~/composables/interface/chart-settings'
 
 const toast = inject<ToastFunction>('toast')
+
 const imageSrc = ref('')
 const loading = ref(false)
 const error = ref('')
 
+// 存储当前图表参数，以便刷新时复用
+let currentData: DoubleResult | null = null
+let currentConfig: ChartData | null = null
+let currentPoints: { id: number; x: string; y: string }[] | null = null
+
 const loadChart = async (data: DoubleResult, config: ChartData, points: { id: number; x: string; y: string }[]) => {
-  console.log(data)
+  // 保存参数以便刷新时使用
+  currentData = data
+  currentConfig = config
+  currentPoints = points
+
   loading.value = true
   error.value = ''
+  let chartDarkMode = false
+  const saved = localStorage.getItem('userSettings')
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved)
+      chartDarkMode = parsed.chartDarkMode ?? false
+    } catch (e) {}
+  }
+  const settings: ChartSettings = { chartDarkMode }
+
+  // 将科学计数法转换为普通数字字符串
+  const newData: DoubleResult = {
+    k: fromScientific(data.k),
+    m: fromScientific(data.m),
+    yStdErr: fromScientific(data.yStdErr), // 修正：原来错误使用了 data.kStdErr
+    kStdErr: fromScientific(data.kStdErr),
+    mStdErr: fromScientific(data.mStdErr),
+    corr: fromScientific(data.corr),
+  }
 
   try {
     const body: Communicate = {
       config: config,
-      data: data,
+      data: newData,
       points: points,
+      settings: settings,
     }
     const response = await fetch('/api/chart', {
       method: 'POST',
@@ -41,6 +73,15 @@ const loadChart = async (data: DoubleResult, config: ChartData, points: { id: nu
     toast?.(message, { type: 'error' })
   } finally {
     loading.value = false
+  }
+}
+
+// 刷新当前图表（使用缓存的参数）
+const refreshChart = () => {
+  if (currentData && currentConfig && currentPoints) {
+    loadChart(currentData, currentConfig, currentPoints)
+  } else {
+    toast?.('没有可刷新的图表', { type: 'warning' })
   }
 }
 
@@ -69,7 +110,8 @@ const downloadChart = async () => {
   }
 }
 
-defineExpose({ loadChart })
+// 暴露方法给父组件
+defineExpose({ loadChart, refreshChart })
 </script>
 
 <template>
@@ -88,7 +130,7 @@ defineExpose({ loadChart })
         <div v-else-if="error" class="error-box">
           <div class="error-icon">⚠</div>
           <p class="error-text">{{ error }}</p>
-          <button class="retry-btn" @click="loadChart">重新加载</button>
+          <button class="retry-btn" @click="refreshChart">重新加载</button>
         </div>
 
         <Transition name="fade" v-else>
@@ -101,7 +143,7 @@ defineExpose({ loadChart })
           <span class="btn-icon">⬇</span>
           <span class="btn-text">下载</span>
         </button>
-        <button class="action-btn reload-btn" @click="loadChart" :disabled="loading" title="重新加载" aria-label="重新加载图表">
+        <button class="action-btn reload-btn" @click="refreshChart" :disabled="loading" title="重新加载" aria-label="重新加载图表">
           <span class="btn-icon">🔄</span>
           <span class="btn-text">{{ loading ? '加载中...' : '刷新' }}</span>
         </button>

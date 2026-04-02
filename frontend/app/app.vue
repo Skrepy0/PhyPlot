@@ -37,6 +37,7 @@ provide('toast', toastAdd)
   <Head />
   <div class="context">
     <SideBar ref="pageStatus" />
+    <Settings :show="pageStatus?.showSettings"></Settings>
     <UnivariateStatistics :show="pageStatus?.showUnivariateStatistics" />
     <DrawChartPage :show="pageStatus?.showDrawChart"></DrawChartPage>
     <Dialog ref="dialogRef" />

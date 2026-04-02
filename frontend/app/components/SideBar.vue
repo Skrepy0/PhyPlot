@@ -4,12 +4,8 @@ import { ref } from 'vue'
 const showSidebar = ref(false)
 const showUnivariateStatistics = ref(false)
 const showDrawChart = ref(false)
-
-const Pages: Ref[] = [showDrawChart, showUnivariateStatistics]
-
-const hideSidebar = () => {
-  showSidebar.value = false
-}
+const showSettings = ref(false)
+const Pages: Ref[] = [showDrawChart, showUnivariateStatistics, showSettings]
 const showPage = (targetPage: Ref) => {
   Pages.forEach((page) => {
     if (page.value && page !== targetPage) {
@@ -20,20 +16,24 @@ const showPage = (targetPage: Ref) => {
 }
 const showUS = () => {
   showPage(showUnivariateStatistics)
-  hideSidebar()
 }
 const showDCP = () => {
   showPage(showDrawChart)
-  hideSidebar()
 }
+const showSs = () => {
+  showPage(showSettings)
+}
+setTimeout(() => {
+  showSidebar.value = true
+}, 500)
 defineExpose({
   showUnivariateStatistics,
   showDrawChart,
+  showSettings,
 })
 </script>
 
 <template>
-  <WeltButton @show-sidebar="showSidebar = !showSidebar" v-if="!showSidebar" />
   <Transition name="slide-fade">
     <div class="sidebar-container" v-if="showSidebar">
       <button class="data-point-btn sidebar-btn" tooltip="单变量统计" data-position="right" @click="showUS">
@@ -64,19 +64,11 @@ defineExpose({
           ></path>
         </svg>
       </button>
-      <button class="settings-btn sidebar-btn" tooltip="设置" data-position="right">
+      <button class="settings-btn sidebar-btn" tooltip="设置" data-position="right" @click="showSs">
         <svg class="icon" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" width="25" height="25">
           <path
             d="M803.84 245.020444q39.537778 22.869333 62.407111 62.464 22.869333 39.594667 22.869333 85.333334v238.364444q0 45.738667-22.869333 85.333334t-62.464 62.464L597.333333 898.275556q-39.594667 22.869333-85.333333 22.869333t-85.333333-22.869333l-206.506667-119.239112q-39.537778-22.869333-62.407111-62.464-22.869333-39.594667-22.869333-85.333333v-238.364444q0-45.738667 22.869333-85.333334T220.16 245.020444L426.666667 125.724444Q466.261333 102.968889 512 102.968889t85.333333 22.869333l206.506667 119.239111z m-56.888889 98.531556L540.444444 224.312889q-28.444444-16.384-56.888888 0L277.048889 343.608889q-28.444444 16.384-28.444445 49.265778v238.364444q0 32.881778 28.444445 49.265778l206.506667 119.239111q28.444444 16.384 56.888888 0l206.506667-119.239111q28.444444-16.384 28.444445-49.265778v-238.364444q0-32.881778-28.444445-49.265778z m-236.657778 282.737778a113.777778 113.777778 0 1 0 0-227.555556 113.777778 113.777778 0 0 0 0 227.555556z"
             fill="#ffffff"
-          ></path>
-        </svg>
-      </button>
-      <button class="close-btn sidebar-btn" tooltip="关闭" data-position="right" @click="hideSidebar">
-        <svg class="icon" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" width="25" height="25">
-          <path
-            d="M224.32 505.6a31.936 31.936 0 0 1 10.88-19.84l222.08-222.08a32 32 0 0 1 45.12 45.12l-169.28 169.28H768a32 32 0 0 1 0 64H333.12l169.28 169.28a32 32 0 1 1-45.12 45.44l-224-224a31.968 31.968 0 0 1-8.96-27.2z"
-            fill="#fff"
           ></path>
         </svg>
       </button>
