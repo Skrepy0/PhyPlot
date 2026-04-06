@@ -27,14 +27,16 @@ const loadChart = async (data: DoubleResult, config: ChartData, points: { id: nu
   loading.value = true
   error.value = ''
   let chartDarkMode = false
+  let showGrid = false
   const saved = localStorage.getItem('userSettings')
   if (saved) {
     try {
       const parsed = JSON.parse(saved)
       chartDarkMode = parsed.chartDarkMode ?? false
+      showGrid = parsed.showGrid ?? false
     } catch (e) {}
   }
-  const settings: ChartSettings = { chartDarkMode }
+  const settings: ChartSettings = { chartDarkMode ,showGrid}
 
   // 将科学计数法转换为普通数字字符串
   const newData: DoubleResult = {

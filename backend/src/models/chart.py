@@ -44,6 +44,8 @@ class Chart:
 
     # 暗色模式标志
     dark_mode: bool = False
+    # 是否显示网格
+    show_grid: bool = True
 
     # 颜色方案
     @property
@@ -144,7 +146,8 @@ class Chart:
             text.set_color(self.colors['text'])
 
         # 网格（更美观）
-        ax.grid(True, linestyle='--', linewidth=0.8, alpha=0.5, color=self.colors['grid'])
+        if self.show_grid:
+            ax.grid(True, linestyle='--', linewidth=0.8, alpha=0.5, color=self.colors['grid'])
 
         # 参数信息框（毛玻璃效果）
         if show_params:

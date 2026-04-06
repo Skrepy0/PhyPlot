@@ -29,7 +29,8 @@ def get_chart():
         point_legend=config["pointCutline"],
         line_legend = config["lineCutline"],
 
-        dark_mode=settings["chartDarkMode"]
+        dark_mode=settings["chartDarkMode"],
+        show_grid=settings["showGrid"]
     )
     app.logger.debug(settings["chartDarkMode"])
     chart.load_from_frontend(response["points"])

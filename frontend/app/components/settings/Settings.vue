@@ -8,11 +8,9 @@ const props = defineProps({
 })
 
 const settings = reactive({
-  chartDarkMode: true,
-
-  autoRefresh: false,
-  notifications: true,
+  chartDarkMode: false,
   showGrid: true,
+  autoFocus: true,
 })
 
 const saveSettings = () => {
@@ -48,35 +46,25 @@ onMounted(() => {
 
       <div class="settings-group">
         <div class="setting-item">
+          <div class="setting-info" data-tooltip="开启后,添加x,y数据点并提交后,自动聚焦到x值的输入框,方便下次输入">
+            <span class="setting-label">自动聚焦</span>
+            <span class="setting-desc">自动聚焦到x值的输入框</span>
+          </div>
+          <ToggleSwitch v-model="settings.autoFocus" />
+        </div>
+        <div class="setting-item">
           <div class="setting-info" data-tooltip="切换图表的亮色/暗色主题">
             <span class="setting-label">图表暗色模式</span>
             <span class="setting-desc">图表生成时使用暗色背景</span>
           </div>
           <ToggleSwitch v-model="settings.chartDarkMode" />
         </div>
-
-        <div class="setting-item">
-          <div class="setting-info" data-tooltip="每隔5分钟自动刷新页面数据">
-            <span class="setting-label">自动刷新</span>
-            <span class="setting-desc">每 5 分钟自动刷新数据</span>
-          </div>
-          <ToggleSwitch v-model="settings.autoRefresh" />
-        </div>
-
-        <div class="setting-item">
-          <div class="setting-info" data-tooltip="开启后接收浏览器通知提醒">
-            <span class="setting-label">通知提醒</span>
-            <span class="setting-desc">接收重要事件通知</span>
-          </div>
-          <Checkbox v-model="settings.notifications" />
-        </div>
-
         <div class="setting-item">
           <div class="setting-info" data-tooltip="图表背景显示网格线，便于观察">
             <span class="setting-label">显示网格</span>
             <span class="setting-desc">图表中显示辅助网格线</span>
           </div>
-          <Checkbox v-model="settings.showGrid" />
+          <ToggleSwitch v-model="settings.showGrid" />
         </div>
       </div>
     </div>

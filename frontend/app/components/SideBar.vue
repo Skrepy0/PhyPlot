@@ -44,14 +44,6 @@ defineExpose({
           ></path>
         </svg>
       </button>
-      <button class="statistic-btn sidebar-btn" tooltip="统计" data-position="right">
-        <svg class="icon" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" width="25" height="25">
-          <path
-            d="M908.288 692.224a25.6 25.6 0 0 1-46.592-21.248 384 384 0 1 0-114.688 144.7424 25.6 25.6 0 0 1 31.3344 40.448 435.2 435.2 0 1 1 129.8944-163.9936z m-461.824-34.816l-76.5952-136.0384-93.184 127.7952a25.6 25.6 0 1 1-41.3696-30.208l140.1344-192.1024 77.056 136.9088 113.408-151.9616 98.816 127.7952 112.2816-194.048a25.6 25.6 0 0 1 44.288 25.6512l-150.4256 260.0448-104.2432-134.8096-120.1152 160.9728z"
-            fill="#ffffff"
-          ></path>
-        </svg>
-      </button>
       <button class="chart-btn sidebar-btn" tooltip="图表" data-position="right" @click="showDCP">
         <svg class="icon" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" width="25" height="25">
           <path

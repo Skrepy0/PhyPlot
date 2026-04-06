@@ -40,6 +40,10 @@ const copyValue = async (val: string | number): Promise<void> => {
   copy(val, toast)
 }
 const submit = async () => {
+  if (!verifyDataPoints(lineData.value)) {
+    toast?.("请检查是否有重复的x值输入!", { type: "error" })
+    return
+  }
   await solve(results, configData, lineData.value)
   if (chartRef.value) {
     chartRef.value.loadChart(results.value, configData.value, lineData.value)

@@ -32,7 +32,7 @@ export const solve = async (
   const stdUncertainty = new Decimal(uncertainty_a).pow(2).add(new Decimal(uncertainty_b).pow(2)).sqrt().toString()
 
   res.value = {
-    count: format(count, 0),
+    count: count,
     variance: format(vari, significantDigits),
     stdErr: format(std_err, significantDigits),
     meanStdDev: format(mean_std_dev, significantDigits),

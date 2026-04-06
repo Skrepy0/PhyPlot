@@ -9,6 +9,7 @@ type Row = SingleRow | DoubleRow
 const dialog = inject<(options: DialogOptions) => Promise<boolean>>('dialog')
 const toast = inject<ToastFunction>('toast')
 const numberRegex = /^-?\d+(\.\d+)?([eE][-+]?\d+)?$/
+const inputStart = ref<HTMLInputElement | null>(null);
 const props = defineProps<{
   variableType: 'single' | 'double'
   modelValue?: Row[]
@@ -118,6 +119,7 @@ const saveEdit = (id: number) => {
     ;(rows.value[index] as DoubleRow).y = editBuffer.value.y ?? '0'
   }
   cancelEdit()
+
 }
 
 const cancelEdit = () => {
@@ -176,6 +178,15 @@ const commitAdd = () => {
       lastAddedId.value = null
     }, 1000)
   })
+  const saved = localStorage.getItem('userSettings')
+  let autoFocus = false
+  if (saved) {
+    try {
+      autoFocus = JSON.parse(saved).autoFocus
+    } catch (e) {}
+  }
+  if (autoFocus)
+    inputStart.value?.focus()// 自动对焦
 }
 
 const resetData = () => {
@@ -288,7 +299,7 @@ defineExpose({ addRow, deleteRow, resetData })
           @keydown.enter="commitAdd"
         />
         <template v-else>
-          <input type="text" v-model="newRowBuffer.x" placeholder="X" class="form-input" />
+          <input type="text" v-model="newRowBuffer.x" placeholder="X" class="form-input" ref="inputStart" />
           <input type="text" v-model="newRowBuffer.y" placeholder="Y" class="form-input" @keydown.enter="commitAdd" />
         </template>
         <button class="add-btn" @click="commitAdd">+ 添加</button>

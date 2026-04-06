@@ -33,6 +33,7 @@ const updateValue = (e: Event) => {
   }
 
   .slider {
+    cursor: pointer;
     position: absolute;
     inset: 0;
     background: rgba(255, 255, 255, 0.1);
@@ -50,7 +51,7 @@ const updateValue = (e: Event) => {
       bottom: 2px;
       background: #ffffff;
       border-radius: 50%;
-      transition: 0.3s;
+      transition: 0.20s;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     }
   }
