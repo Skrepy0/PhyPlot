@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -m py_compile src/app.py src/models/chart.py)",
+      "Bash(python *)",
+      "Bash(npm run *)",
+      "Bash(npm install *)",
+      "Bash(netstat -ano)",
+      "Bash(findstr :3000)",
+      "Bash(dir)",
+      "Bash(pip install *)",
+      "Bash(/d/Python3.12.7/python.exe app.py)",
+      "Bash(.venv\\\\Scripts\\\\python.exe test_chart.py)",
+      "Bash(backend\\\\.venv\\\\Scripts\\\\python.exe test_chart.py)",
+      "Bash(.venv\\\\Scripts\\\\python.exe \"d:\\\\Front-projects\\\\phyplot\\\\test_chart.py\")",
+      "Bash(.venv\\\\Scripts\\\\pip install *)",
+      "Bash(curl -X POST http://localhost:3001/api/chart -H \"Content-Type: application/json\" -d \"{\\\\\"test\\\\\":\\\\\"data\\\\\"}\")",
+      "Bash(start /B .venv\\\\Scripts\\\\python.exe src/app.py)",
+      "Bash(findstr :3001)",
+      "Bash(taskkill /F /IM python.exe)",
+      "Bash(curl -X GET \"http://localhost:3001/api/test\")",
+      "Bash(ping localhost *)",
+      "Bash(curl -v http://127.0.0.1:3001/api/test)"
+    ]
+  }
+}

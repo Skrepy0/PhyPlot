@@ -1,11 +1,12 @@
 import { Decimal } from 'decimal.js'
-import type { DoubleResult } from '~/composables/interface/double-result'
+import type { DoubleResult, ExponentialResult, FitLine } from '~/composables/interface/double-result'
 import type { ChartData } from '~/composables/interface/chart-data'
 import { getK } from '~/composables/math/get-k'
 import { getAveDec } from '~/composables/math/average'
 import { format, toScientific } from '~/composables/tools'
 import { getKStdErr, getMStdErr, getYStdErr } from '~/composables/math/standard-error'
 import { getCorr } from '../math/getCorr'
+import { getExponentialFit } from '~/composables/math/exponential-fit'
 
 export const solve = async (
   res: Ref<DoubleResult>,
@@ -47,4 +48,57 @@ export const solve = async (
     mStdErr: format(toScientific(mStdErr), significantDigits),
     corr: format(toScientific(await getCorr(points)), significantDigits),
   }
+}
+
+export const solveExponential = async (
+  res: Ref<ExponentialResult>,
+  config: Ref<ChartData>,
+  pointList: {
+    id: number
+    x: string
+    y: string
+  }[]
+) => {
+  let points: { x: string; y: string }[] = pointList.map((point) => {
+    return { x: point.x, y: point.y }
+  })
+
+  const result = await getExponentialFit(points)
+  res.value = {
+    a: result.a,
+    b: result.b,
+    aStdErr: result.aStdErr,
+    bStdErr: result.bStdErr,
+    corr: result.corr,
+    yStdErr: result.yStdErr
+  }
+}
+
+export const solveMultipleLines = async (
+  lines: FitLine[],
+  config: Ref<ChartData>
+) => {
+  const results: FitLine[] = []
+
+  for (const line of lines) {
+    const lineResult = { ...line }
+
+    if (line.type === 'linear') {
+      const tempResult = ref<DoubleResult>({
+        k: '', m: '', yStdErr: '', kStdErr: '', mStdErr: '', corr: ''
+      })
+      await solve(tempResult, config, line.data)
+      lineResult.result = tempResult.value
+    } else if (line.type === 'exponential') {
+      const tempResult = ref<ExponentialResult>({
+        a: '', b: '', aStdErr: '', bStdErr: '', corr: '', yStdErr: ''
+      })
+      await solveExponential(tempResult, config, line.data)
+      lineResult.result = tempResult.value
+    }
+
+    results.push(lineResult)
+  }
+
+  return results
 }

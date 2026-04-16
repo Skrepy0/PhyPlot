@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import List, Tuple, TypedDict, Optional
+from typing import List, Tuple, TypedDict
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
@@ -19,6 +19,34 @@ class FrontPoint(TypedDict):
     x: str
     y: str
 
+
+@dataclass
+class FitLine:
+    # 拟合线类型：linear 或 exponential
+    fit_type: str = "linear"
+
+    # 数据点
+    points: List[Tuple[float, float]] = field(default_factory=list)
+
+    # 回归参数
+    k: float = 0.0  # 线性：斜率，指数：不适用
+    m: float = 0.0  # 线性：截距，指数：不适用
+    a: float = 0.0  # 指数：系数a
+    b: float = 0.0  # 指数：系数b
+
+    # 误差
+    k_error: float = 0.0
+    m_error: float = 0.0
+    a_error: float = 0.0
+    b_error: float = 0.0
+
+    # 统计信息
+    corr: float = 0.0
+    y_std_err: float = 0.0
+
+    # 显示名称和颜色
+    name: str = ""
+    color: str = ""
 
 @dataclass
 class Chart:
@@ -46,6 +74,9 @@ class Chart:
     dark_mode: bool = False
     # 是否显示网格
     show_grid: bool = True
+
+    # 多条拟合线
+    fit_lines: List[FitLine] = field(default_factory=list)
 
     # 颜色方案
     @property
@@ -90,40 +121,117 @@ class Chart:
         self.points.append((x, y))
 
     def to_base64(self, show_params: bool = True, dpi: int = 120) -> str:
-        if not self.points:
+        if not self.points and not self.fit_lines:
             raise ValueError("无数据点")
 
-        x_vals = np.array([p[0] for p in self.points])
-        y_vals = np.array([p[1] for p in self.points])
+        # 收集所有数据点的范围
+        all_x_vals = []
+        all_y_vals = []
+
+        if self.points:
+            all_x_vals.extend([p[0] for p in self.points])
+            all_y_vals.extend([p[1] for p in self.points])
+
+        for line in self.fit_lines:
+            if line.points:
+                all_x_vals.extend([p[0] for p in line.points])
+                all_y_vals.extend([p[1] for p in line.points])
+
+        if not all_x_vals:
+            raise ValueError("无有效数据点")
+
+        x_min, x_max = min(all_x_vals), max(all_x_vals)
+        y_min, y_max = min(all_y_vals), max(all_y_vals)
+
+        # 扩展范围以便更好地显示
+        x_range = x_max - x_min
+        y_range = y_max - y_min
+        x_min -= x_range * 0.05
+        x_max += x_range * 0.05
+        y_min -= y_range * 0.05
+        y_max += y_range * 0.05
 
         # 创建图形，设置背景色
         fig, ax = plt.subplots(figsize=(8, 6), facecolor=self.colors['bg'])
         ax.set_facecolor(self.colors['axes'])
 
-        # 散点图（加大点尺寸，增加边缘白色，更清晰）
-        ax.scatter(x_vals, y_vals,
-                   label=self.point_legend,
-                   color=self.colors['scatter'],
-                   s=60,
-                   edgecolors='white',
-                   linewidth=1.5,
-                   alpha=0.9,
-                   zorder=3)
+        # 预定义颜色列表用于多条拟合线
+        line_colors = ['#4cd964', '#ff7f0e', '#1f77b4', '#ff6b6b', '#9c27b0', '#00bcd4']
 
-        # 拟合直线
-        x_line = np.linspace(x_vals.min(), x_vals.max(), 200)
-        y_line = self.k * x_line + self.m
-        ax.plot(x_line, y_line,
-                label=f"{self.line_legend}: y = {self.k:.4f}x + {self.m:.4f}",
-                color=self.colors['line'],
-                linewidth=2.5,
-                linestyle='-',
-                zorder=2)
+        # 绘制原始数据点
+        if self.points:
+            x_vals = np.array([p[0] for p in self.points])
+            y_vals = np.array([p[1] for p in self.points])
+            ax.scatter(x_vals, y_vals,
+                       label=self.point_legend,
+                       color=self.colors['scatter'],
+                       s=60,
+                       edgecolors='white',
+                       linewidth=1.5,
+                       alpha=0.9,
+                       zorder=3)
+
+        # 绘制多条拟合线
+        param_texts = []
+
+        # 绘制主拟合线（如果存在）
+        if self.points and self.k != 0.0:
+            x_line = np.linspace(x_min, x_max, 200)
+            y_line = self.k * x_line + self.m
+            ax.plot(x_line, y_line,
+                    label=f"{self.line_legend}: y = {self.k:.4f}x + {self.m:.4f}",
+                    color=self.colors['line'],
+                    linewidth=2.5,
+                    linestyle='-',
+                    zorder=2)
+
+        # 绘制额外的拟合线
+        for i, line in enumerate(self.fit_lines):
+            if not line.points:
+                continue
+
+            line_x_vals = np.array([p[0] for p in line.points])
+            line_y_vals = np.array([p[1] for p in line.points])
+
+            # 绘制该线的数据点
+            if line.fit_type == 'linear':
+                point_label = f"{line.name} 数据点" if line.name else f"数据集{i+1}"
+            else:
+                point_label = f"{line.name} 数据点" if line.name else f"指数数据集{i+1}"
+
+            # 使用自定义颜色或回退到预设颜色
+            point_color = line.color if line.color else line_colors[i % len(line_colors)]
+
+            ax.scatter(line_x_vals, line_y_vals,
+                       label=point_label,
+                       color=point_color,
+                       s=40,
+                       alpha=0.7,
+                       zorder=3)
+
+            # 绘制拟合曲线
+            x_fit = np.linspace(min(line_x_vals), max(line_x_vals), 200)
+
+            if line.fit_type == 'linear':
+                y_fit = line.k * x_fit + line.m
+                line_label = f"{line.name}: y = {line.k:.4f}x + {line.m:.4f}" if line.name else f"线性拟合{i+1}: y = {line.k:.4f}x + {line.m:.4f}"
+            else:  # exponential
+                y_fit = line.a * np.exp(line.b * x_fit)
+                line_label = f"{line.name}: y = {line.a:.4f}e^({line.b:.4f}x)" if line.name else f"指数拟合{i+1}: y = {line.a:.4f}e^({line.b:.4f}x)"
+
+            ax.plot(x_fit, y_fit,
+                    label=line_label,
+                    color=point_color,
+                    linewidth=2.5,
+                    linestyle='-',
+                    zorder=2)
 
         # 标题与轴标签
         ax.set_title(self.title, fontsize=14, fontweight='bold', color=self.colors['text'], pad=12)
         ax.set_xlabel(self.x_label, fontsize=12, color=self.colors['text'], labelpad=8)
         ax.set_ylabel(self.y_label, fontsize=12, color=self.colors['text'], labelpad=8)
+        ax.set_xlim(x_min, x_max)
+        ax.set_ylim(y_min, y_max)
 
         # 刻度颜色
         ax.tick_params(colors=self.colors['text'], labelsize=10)
@@ -141,23 +249,48 @@ class Chart:
             edgecolor=self.colors['text']
         )
 
-        # ⭐ 设置图例文字颜色
+        # 设置图例文字颜色
         for text in legend.get_texts():
             text.set_color(self.colors['text'])
 
-        # 网格（更美观）
+        # 网格
         if self.show_grid:
             ax.grid(True, linestyle='--', linewidth=0.8, alpha=0.5, color=self.colors['grid'])
 
-        # 参数信息框（毛玻璃效果）
+        # 参数信息框
         if show_params:
-            text = (
-                f"拟合参数\n"
-                f"斜率 k = {self.k:.4f} ± {self.k_error:.4f}\n"
-                f"截距 m = {self.m:.4f} ± {self.m_error:.4f}\n"
-                f"相关系数 r = {self.corr:.4f}\n"
-                f"置信度 = {self.confidence:.2%}"
-            )
+            text_parts = ["拟合参数"]
+
+            # 主拟合线参数
+            if self.points and self.k != 0.0:
+                text_parts.append(f"主拟合线:")
+                text_parts.append(f"  k = {self.k:.4f} ± {self.k_error:.4f}")
+                text_parts.append(f"  m = {self.m:.4f} ± {self.m_error:.4f}")
+                text_parts.append(f"  r = {self.corr:.4f}")
+                text_parts.append("")
+
+            # 额外拟合线参数
+            for i, line in enumerate(self.fit_lines):
+                if line.name:
+                    text_parts.append(f"{line.name}:")
+                else:
+                    text_parts.append(f"拟合线{i+1}:")
+
+                if line.fit_type == 'linear':
+                    text_parts.append(f"  k = {line.k:.4f} ± {line.k_error:.4f}")
+                    text_parts.append(f"  m = {line.m:.4f} ± {line.m_error:.4f}")
+                else:
+                    text_parts.append(f"  a = {line.a:.4f} ± {line.a_error:.4f}")
+                    text_parts.append(f"  b = {line.b:.4f} ± {line.b_error:.4f}")
+
+                text_parts.append(f"  r = {line.corr:.4f}")
+                text_parts.append("")
+
+            if len(text_parts) > 1:
+                text_parts.pop()  # 移除最后一个空行
+
+            text = "\n".join(text_parts)
+
             bbox_props = dict(
                 boxstyle="round,pad=0.5",
                 facecolor=self.colors['param_bg'],
@@ -168,8 +301,7 @@ class Chart:
             ax.text(0.02, 0.98, text,
                     transform=ax.transAxes,
                     verticalalignment='top',
-                    fontsize=10,
-                    # 移除 family='monospace'，使用全局中文字体
+                    fontsize=9,
                     color=self.colors['param_text'],
                     bbox=bbox_props,
                     zorder=10)
@@ -177,6 +309,7 @@ class Chart:
         # 紧凑布局
         plt.tight_layout()
         fig.subplots_adjust(left=0.12, right=1.00)
+
         # 转换为 base64
         img = BytesIO()
         plt.savefig(img, format='png', dpi=dpi, bbox_inches='tight', facecolor=fig.get_facecolor())

@@ -2,19 +2,18 @@
 import DataTable from '~/components/data-components/DataTable.vue'
 import { inject, ref } from 'vue'
 import Chart from '~/components/chart/Chart.vue'
-import { solve } from '~/composables/solve-data/double-data'
+import { solve, solveExponential } from '~/composables/solve-data/double-data'
+import { verifyDataPoints } from '~/composables/tools'
 import { copy } from '~/composables/tools'
 import type { ToastFunction } from '~/composables/interface/toast'
 import type { ChartData } from '~/composables/interface/chart-data'
-import type { DoubleResult } from '~/composables/interface/double-result'
+import type { DoubleResult, ExponentialResult, FitLine } from '~/composables/interface/double-result'
 const props = defineProps({
   show: Boolean,
 })
 const confidenceOptions = ['68.3%', '95%', '99.7%']
-const draftingMethodOptions = ['线性拟合']
 const errorDistributionOptions = ['均匀分布', '三角分布', '正态分布']
 const toast = inject<ToastFunction>('toast')
-const lineData = ref<{ id: number; x: string; y: string }[]>([])
 const chartRef = ref<InstanceType<typeof Chart> | null>(null)
 const configData = ref<ChartData>({
   chartTitle: '',
@@ -36,20 +35,166 @@ const results = ref<DoubleResult>({
   mStdErr: '',
   corr: '',
 })
+
+const fitLines = ref<FitLine[]>([])
+const nextLineId = ref(1)
+const selectedLineId = ref<number | null>(null)
 const copyValue = async (val: string | number): Promise<void> => {
   copy(val, toast)
 }
 const submit = async () => {
-  if (!verifyDataPoints(lineData.value)) {
-    toast?.("请检查是否有重复的x值输入!", { type: "error" })
+  // 如果没有拟合线，提示用户添加
+  if (fitLines.value.length === 0) {
+    toast?.('请至少添加一条拟合线', { type: 'warning' })
     return
   }
-  await solve(results, configData, lineData.value)
-  if (chartRef.value) {
-    chartRef.value.loadChart(results.value, configData.value, lineData.value)
-    console.log('图表已刷新')
+
+  // 检查所有拟合线是否都有足够的数据
+  const incompleteLines = fitLines.value.filter(line => line.data.length < 2)
+  if (incompleteLines.length > 0) {
+    toast?.('所有拟合线至少需要2个数据点', { type: 'warning' })
+    return
+  }
+
+  // 检查重复的x值
+  for (const line of fitLines.value) {
+    if (!verifyDataPoints(line.data)) {
+      toast?.(`拟合线"${line.name}"存在重复的x值!`, { type: 'error' })
+      return
+    }
+  }
+
+  try {
+    // 计算所有拟合线的结果
+    for (const line of fitLines.value) {
+      if (line.type === 'linear') {
+        const tempResult = ref<DoubleResult>({
+          k: '',
+          m: '',
+          yStdErr: '',
+          kStdErr: '',
+          mStdErr: '',
+          corr: '',
+        })
+        await solve(tempResult, configData, line.data)
+        line.result = tempResult.value
+      } else {
+        const tempResult = ref<ExponentialResult>({
+          a: '',
+          b: '',
+          aStdErr: '',
+          bStdErr: '',
+          corr: '',
+          yStdErr: '',
+        })
+        await solveExponential(tempResult, configData, line.data)
+        line.result = tempResult.value
+      }
+    }
+
+    if (chartRef.value && fitLines.value.length > 0) {
+      // 使用第一条拟合线作为主要显示，并传入所有拟合线
+      const mainLine = fitLines.value[0]
+      if (mainLine) {
+        if (mainLine.type === 'linear') {
+          await solve(results, configData, mainLine.data)
+        } else {
+          const expResult = ref<ExponentialResult>({
+            a: '',
+            b: '',
+            aStdErr: '',
+            bStdErr: '',
+            corr: '',
+            yStdErr: '',
+          })
+          await solveExponential(expResult, configData, mainLine.data)
+          results.value = {
+            k: expResult.value.b,
+            m: expResult.value.a,
+            yStdErr: expResult.value.yStdErr,
+            kStdErr: expResult.value.bStdErr,
+            mStdErr: expResult.value.aStdErr,
+            corr: expResult.value.corr,
+          }
+        }
+
+        chartRef.value.loadChart(results.value, configData.value, mainLine.data, fitLines.value)
+        console.log('图表已刷新')
+      }
+    }
+  } catch (error) {
+    toast?.(`计算失败: ${error instanceof Error ? error.message : '未知错误'}`, { type: 'error' })
   }
 }
+
+const addFitLine = () => {
+  const newLine: FitLine = {
+    id: nextLineId.value++,
+    type: 'linear',
+    name: `拟合线${nextLineId.value - 1}`,
+    data: [],
+    result: null,
+    color: `#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')}`,
+    legend: `拟合线${nextLineId.value - 1}`,
+    pointLegend: '数据点'
+  }
+  fitLines.value.push(newLine)
+  selectedLineId.value = newLine.id
+  toast?.('已添加新拟合线', { type: 'success' })
+}
+
+const removeFitLine = (id: number) => {
+  const index = fitLines.value.findIndex((line) => line.id === id)
+  if (index > -1) {
+    fitLines.value.splice(index, 1)
+    if (selectedLineId.value === id) {
+      selectedLineId.value = fitLines.value.length > 0 ? fitLines.value[0]?.id || null : null
+    }
+    toast?.('已删除拟合线', { type: 'success' })
+  }
+}
+
+const calculateFitLine = async (line: FitLine) => {
+  if (line.data.length < 2) {
+    toast?.('至少需要2个数据点才能计算拟合', { type: 'warning' })
+    return
+  }
+
+  if (!verifyDataPoints(line.data)) {
+    toast?.('请检查是否有重复的x值输入!', { type: 'error' })
+    return
+  }
+
+  try {
+    if (line.type === 'linear') {
+      const tempResult = ref<DoubleResult>({
+        k: '',
+        m: '',
+        yStdErr: '',
+        kStdErr: '',
+        mStdErr: '',
+        corr: '',
+      })
+      await solve(tempResult, configData, line.data)
+      line.result = tempResult.value
+    } else {
+      const tempResult = ref<ExponentialResult>({
+        a: '',
+        b: '',
+        aStdErr: '',
+        bStdErr: '',
+        corr: '',
+        yStdErr: '',
+      })
+      await solveExponential(tempResult, configData, line.data)
+      line.result = tempResult.value
+    }
+    toast?.('拟合计算完成', { type: 'success' })
+  } catch (error) {
+    toast?.(`计算失败: ${error instanceof Error ? error.message : '未知错误'}`, { type: 'error' })
+  }
+}
+
 </script>
 
 <template>
@@ -68,15 +213,6 @@ const submit = async () => {
                   <div class="form-row">
                     <label class="form-label">表头</label>
                     <input class="form-input" v-model="configData.chartTitle" />
-                  </div>
-
-                  <div class="form-row">
-                    <label class="form-label">拟合方式</label>
-                    <select v-model="configData.draftingMethod" class="form-select">
-                      <option v-for="opt in draftingMethodOptions" :key="opt">
-                        {{ opt }}
-                      </option>
-                    </select>
                   </div>
 
                   <div class="form-row">
@@ -118,23 +254,85 @@ const submit = async () => {
                     <label class="form-label">y轴名称</label>
                     <input class="form-input" v-model="configData.yName" />
                   </div>
-
-                  <div class="form-row">
-                    <label class="form-label">点图例</label>
-                    <input class="form-input" v-model="configData.pointCutline" />
-                  </div>
-
-                  <div class="form-row">
-                    <label class="form-label">线图例</label>
-                    <input class="form-input" v-model="configData.lineCutline" />
-                  </div>
                 </div>
               </div>
             </div>
 
-            <!-- 表格 -->
-            <div class="table-section">
-              <DataTable variable-type="double" v-model="lineData" />
+
+            <!-- 拟合线管理 -->
+            <div class="fit-lines-management">
+              <div class="fit-lines-header">
+                <h3 class="section-title">拟合线管理</h3>
+                <button class="add-line-btn" @click="addFitLine">+ 添加拟合线</button>
+              </div>
+
+              <div v-if="fitLines.length > 0" class="fit-lines-tabs">
+                <div class="fit-lines-tabs-header">
+                  <div
+                    v-for="line in fitLines"
+                    :key="line.id"
+                    class="fit-line-tab"
+                    :class="{ active: selectedLineId === line.id }"
+                    @click="selectedLineId = line.id"
+                  >
+                    <span class="fit-line-tab-name">{{ line.name }}</span>
+                    <button class="remove-line-btn" @click.stop="removeFitLine(line.id)">×</button>
+                  </div>
+                </div>
+
+                <div v-if="selectedLineId" class="fit-line-configuration">
+                  <div v-for="line in fitLines.filter(l => l.id === selectedLineId)" :key="line.id" class="active-line-config">
+                    <div class="config-section">
+                      <div class="form-row">
+                        <label class="form-label">拟合线名称</label>
+                        <input class="form-input" v-model="line.name" />
+                      </div>
+
+                      <div class="form-row">
+                        <label class="form-label">拟合类型</label>
+                        <select v-model="line.type" class="form-select">
+                          <option value="linear">线性拟合</option>
+                          <option value="exponential">指数拟合</option>
+                        </select>
+                      </div>
+
+                      <div class="form-row">
+                        <label class="form-label">线条颜色</label>
+                        <input type="color" v-model="line.color" class="color-picker" />
+                      </div>
+
+                      <div class="form-row">
+                        <label class="form-label">线图例</label>
+                        <input class="form-input" v-model="line.legend" />
+                      </div>
+
+                      <div class="form-row">
+                        <label class="form-label">点图例</label>
+                        <input class="form-input" v-model="line.pointLegend" />
+                      </div>
+                    </div>
+
+                    <div class="data-section">
+                      <h4>数据点配置</h4>
+                      <DataTable variable-type="double" v-model="line.data" />
+                    </div>
+
+                    <div class="calculation-section">
+                      <button
+                        class="calculate-btn"
+                        @click="calculateFitLine(line)"
+                        :disabled="line.data.length < 2"
+                      >
+                        {{ line.result ? '重新计算' : '计算拟合' }}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div v-else class="no-fit-lines">
+                <p>暂无拟合线，点击"+ 添加拟合线"开始</p>
+              </div>
             </div>
 
             <!-- 按钮 -->
@@ -149,41 +347,123 @@ const submit = async () => {
           <div class="data-result">
             <h2 class="card-title">统计</h2>
 
-            <div class="results-container">
-              <div class="results-list">
-                <div class="result-item" @click="copyValue(results.k)">
-                  <span class="result-label">斜率k</span>
-                  <span class="result-value" :title="results.k">{{ results.k || '-' }}</span>
-                </div>
-                <div class="result-item" @click="copyValue(results.m)">
-                  <span class="result-label">截距m</span>
-                  <span class="result-value" :title="results.m">{{ results.m || '-' }}</span>
-                </div>
-                <div class="result-item" @click="copyValue(results.yStdErr)">
-                  <span class="result-label">y标准误差</span>
-                  <span class="result-value" :title="results.yStdErr">{{ results.yStdErr || '-' }}</span>
+            <!-- 拟合线统计结果 -->
+            <div v-if="fitLines.length > 0" class="fit-lines-statistics">
+              <h3 class="section-title">拟合线统计</h3>
+
+              <!-- 拟合线选择器 -->
+              <div class="fit-line-selector">
+                <label class="form-label">选择拟合线查看统计:</label>
+                <select v-model="selectedLineId" class="form-select">
+                  <option v-for="line in fitLines" :key="line.id" :value="line.id">
+                    {{ line.name }} ({{ line.type === 'linear' ? '线性' : '指数' }})
+                  </option>
+                </select>
+              </div>
+
+              <!-- 统计结果显示 -->
+              <div v-if="selectedLineId" class="statistics-content">
+
+                <!-- 拟合线统计 -->
+                <div class="additional-line-statistics">
+                  <div v-for="line in fitLines.filter(l => l.id === selectedLineId)" :key="line.id">
+                    <h4>{{ line.name }} 统计结果</h4>
+                    <div v-if="line.result" class="results-container">
+                      <div class="results-list">
+                        <template v-if="line.type === 'linear'">
+                          <div class="result-item" @click="copyValue((line.result as DoubleResult).k)">
+                            <span class="result-label">斜率k</span>
+                            <span class="result-value" :title="(line.result as DoubleResult).k">
+                              {{ (line.result as DoubleResult).k || '-' }}
+                            </span>
+                          </div>
+                          <div class="result-item" @click="copyValue((line.result as DoubleResult).m)">
+                            <span class="result-label">截距m</span>
+                            <span class="result-value" :title="(line.result as DoubleResult).m">
+                              {{ (line.result as DoubleResult).m || '-' }}
+                            </span>
+                          </div>
+                          <div class="result-item" @click="copyValue((line.result as DoubleResult).yStdErr)">
+                            <span class="result-label">标准误差</span>
+                            <span class="result-value" :title="(line.result as DoubleResult).yStdErr">
+                              {{ (line.result as DoubleResult).yStdErr || '-' }}
+                            </span>
+                          </div>
+                        </template>
+                        <template v-else>
+                          <div class="result-item" @click="copyValue((line.result as ExponentialResult).a)">
+                            <span class="result-label">系数a</span>
+                            <span class="result-value" :title="(line.result as ExponentialResult).a">
+                              {{ (line.result as ExponentialResult).a || '-' }}
+                            </span>
+                          </div>
+                          <div class="result-item" @click="copyValue((line.result as ExponentialResult).b)">
+                            <span class="result-label">指数b</span>
+                            <span class="result-value" :title="(line.result as ExponentialResult).b">
+                              {{ (line.result as ExponentialResult).b || '-' }}
+                            </span>
+                          </div>
+                          <div class="result-item" @click="copyValue((line.result as ExponentialResult).yStdErr)">
+                            <span class="result-label">标准误差</span>
+                            <span class="result-value" :title="(line.result as ExponentialResult).yStdErr">
+                              {{ (line.result as ExponentialResult).yStdErr || '-' }}
+                            </span>
+                          </div>
+                        </template>
+                      </div>
+
+                      <div class="results-list">
+                        <template v-if="line.type === 'linear'">
+                          <div class="result-item" @click="copyValue((line.result as DoubleResult).kStdErr)">
+                            <span class="result-label">k误差</span>
+                            <span class="result-value" :title="(line.result as DoubleResult).kStdErr">
+                              {{ (line.result as DoubleResult).kStdErr || '-' }}
+                            </span>
+                          </div>
+                          <div class="result-item" @click="copyValue((line.result as DoubleResult).mStdErr)">
+                            <span class="result-label">m误差</span>
+                            <span class="result-value" :title="(line.result as DoubleResult).mStdErr">
+                              {{ (line.result as DoubleResult).mStdErr || '-' }}
+                            </span>
+                          </div>
+                        </template>
+                        <template v-else>
+                          <div class="result-item" @click="copyValue((line.result as ExponentialResult).aStdErr)">
+                            <span class="result-label">a误差</span>
+                            <span class="result-value" :title="(line.result as ExponentialResult).aStdErr">
+                              {{ (line.result as ExponentialResult).aStdErr || '-' }}
+                            </span>
+                          </div>
+                          <div class="result-item" @click="copyValue((line.result as ExponentialResult).bStdErr)">
+                            <span class="result-label">b误差</span>
+                            <span class="result-value" :title="(line.result as ExponentialResult).bStdErr">
+                              {{ (line.result as ExponentialResult).bStdErr || '-' }}
+                            </span>
+                          </div>
+                        </template>
+                        <div class="result-item" @click="copyValue(line.result.corr)">
+                          <span class="result-label">相关系数</span>
+                          <span class="result-value" :title="line.result.corr">
+                            {{ line.result.corr || '-' }}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div v-else class="no-results">
+                      <p>请先计算该拟合线</p>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <div class="results-list">
-                <div class="result-item" @click="copyValue(results.kStdErr)">
-                  <span class="result-label">k误差</span>
-                  <span class="result-value" :title="results.kStdErr">{{ results.kStdErr || '-' }}</span>
-                </div>
-                <div class="result-item" @click="copyValue(results.mStdErr)">
-                  <span class="result-label">m误差</span>
-                  <span class="result-value" :title="results.mStdErr">{{ results.mStdErr || '-' }}</span>
-                </div>
-                <div class="result-item" @click="copyValue(results.corr)">
-                  <span class="result-label">相关系数</span>
-                  <span class="result-value" :title="results.corr">{{ results.corr || '-' }}</span>
-                </div>
+              <div v-else class="no-fit-lines-message">
+                <p>请添加拟合线以查看统计结果</p>
               </div>
             </div>
-          </div>
 
-          <div class="chart-result">
-            <Chart ref="chartRef" :config="configData" :data="results" />
+            <div class="chart-result">
+              <Chart ref="chartRef" :config="configData" :data="results" />
+            </div>
           </div>
         </div>
       </div>
@@ -243,6 +523,253 @@ const submit = async () => {
   display: flex;
   justify-content: center;
   padding-top: 10px;
+}
+
+/* 拟合线管理样式 */
+.fit-lines-management {
+  margin-top: 16px;
+  padding: 16px;
+  background: rgba(46, 204, 113, 0.05);
+  border-radius: 8px;
+  border: 1px solid rgba(46, 204, 113, 0.1);
+}
+
+.fit-lines-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.section-title {
+  color: rgba(46, 204, 113, 0.9);
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.add-line-btn {
+  padding: 8px 16px;
+  background: linear-gradient(135deg, rgba(46, 204, 113, 0.8), rgba(39, 174, 96, 0.8));
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.add-line-btn:hover {
+  background: linear-gradient(135deg, rgba(46, 204, 113, 1), rgba(39, 174, 96, 1));
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
+}
+
+.fit-lines-tabs {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.fit-lines-tabs-header {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid rgba(46, 204, 113, 0.2);
+  padding-bottom: 8px;
+}
+
+.fit-line-tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(46, 204, 113, 0.2);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.fit-line-tab:hover {
+  border-color: rgba(46, 204, 113, 0.4);
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.fit-line-tab.active {
+  border-color: rgba(46, 204, 113, 0.6);
+  background: rgba(46, 204, 113, 0.1);
+}
+
+.fit-line-tab-name {
+  color: rgba(46, 204, 113, 0.9);
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.remove-line-btn {
+  background: none;
+  border: none;
+  color: #dc3545;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.remove-line-btn:hover {
+  background: rgba(220, 53, 69, 0.1);
+  transform: scale(1.1);
+}
+
+.fit-line-configuration {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.active-line-config {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.config-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.config-section .form-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.config-section .form-label {
+  min-width: 80px;
+  color: rgba(46, 204, 113, 0.9);
+  font-weight: 500;
+}
+
+.config-section .form-input,
+.config-section .form-select {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(46, 204, 113, 0.3);
+  color: #b0b0b0;
+  border-radius: 4px;
+  padding: 6px 10px;
+  font-size: 14px;
+}
+
+.color-picker {
+  width: 40px;
+  height: 30px;
+  border: 1px solid rgba(46, 204, 113, 0.3);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.data-section h4 {
+  color: rgba(46, 204, 113, 0.9);
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.calculation-section {
+  display: flex;
+  justify-content: center;
+}
+
+.calculate-btn {
+  padding: 8px 16px;
+  background: rgba(46, 204, 113, 0.2);
+  color: rgba(46, 204, 113, 0.9);
+  border: 1px solid rgba(46, 204, 113, 0.3);
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.calculate-btn:hover:not(:disabled) {
+  background: rgba(46, 204, 113, 0.3);
+  border-color: rgba(46, 204, 113, 0.5);
+  transform: translateY(-1px);
+}
+
+.calculate-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.no-fit-lines {
+  text-align: center;
+  color: #888;
+  font-style: italic;
+  padding: 20px;
+}
+
+/* 拟合线统计样式 */
+.fit-lines-statistics {
+  margin-top: 16px;
+  padding: 16px;
+  background: rgba(46, 204, 113, 0.05);
+  border-radius: 8px;
+  border: 1px solid rgba(46, 204, 113, 0.1);
+}
+
+.fit-line-selector {
+  margin-bottom: 16px;
+}
+
+.fit-line-selector .form-label {
+  display: block;
+  margin-bottom: 8px;
+  color: rgba(46, 204, 113, 0.9);
+  font-weight: 500;
+}
+
+.fit-line-selector .form-select {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(46, 204, 113, 0.3);
+  color: #b0b0b0;
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-size: 14px;
+}
+
+.statistics-content h4 {
+  color: rgba(46, 204, 113, 0.9);
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.no-results {
+  text-align: center;
+  color: #888;
+  font-style: italic;
+  padding: 20px;
+}
+
+.main-statistics-preview {
+  margin-bottom: 16px;
+  padding: 12px;
+  background: rgba(46, 204, 113, 0.03);
+  border-radius: 6px;
+  border: 1px solid rgba(46, 204, 113, 0.1);
 }
 
 /* ===== 右侧结果 ===== */
@@ -326,6 +853,65 @@ const submit = async () => {
   .submit-btn {
     width: 100%;
     text-align: center;
+  }
+
+  /* 拟合线管理样式 */
+  .fit-lines-management {
+    margin-top: 16px;
+    padding: 16px;
+    background: rgba(46, 204, 113, 0.05);
+    border-radius: 8px;
+    border: 1px solid rgba(46, 204, 113, 0.1);
+  }
+
+  .fit-lines-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .fit-lines-tabs-header {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .fit-line-tab {
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .config-section .form-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+  }
+
+  .config-section .form-label {
+    min-width: auto;
+  }
+
+  .data-section {
+    overflow-x: auto;
+  }
+
+  /* 拟合线统计样式 */
+  .fit-lines-statistics {
+    margin-top: 16px;
+    padding: 16px;
+    background: rgba(46, 204, 113, 0.05);
+    border-radius: 8px;
+    border: 1px solid rgba(46, 204, 113, 0.1);
+  }
+
+  .fit-line-selector .form-label {
+    font-size: 14px;
+  }
+
+  .main-statistics-preview {
+    padding: 8px;
   }
 
   .chart-result {

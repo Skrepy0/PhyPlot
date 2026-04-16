@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { inject, ref, onMounted } from 'vue'
 import type { ToastFunction, ToastOptions } from '~/composables/interface/toast'
-import type { DoubleResult } from '~/composables/interface/double-result'
+import type { DoubleResult, ExponentialResult, FitLine } from '~/composables/interface/double-result'
 import type { ChartData } from '~/composables/interface/chart-data'
 import type { Communicate } from '~/composables/interface/communicate'
 import { fromScientific } from '~/composables/tools'
@@ -17,12 +17,14 @@ const error = ref('')
 let currentData: DoubleResult | null = null
 let currentConfig: ChartData | null = null
 let currentPoints: { id: number; x: string; y: string }[] | null = null
+let currentFitLines: FitLine[] | null = null
 
-const loadChart = async (data: DoubleResult, config: ChartData, points: { id: number; x: string; y: string }[]) => {
+const loadChart = async (data: DoubleResult, config: ChartData, points: { id: number; x: string; y: string }[], fitLines?: FitLine[]) => {
   // 保存参数以便刷新时使用
   currentData = data
   currentConfig = config
   currentPoints = points
+  currentFitLines = fitLines || null
 
   loading.value = true
   error.value = ''
@@ -36,26 +38,50 @@ const loadChart = async (data: DoubleResult, config: ChartData, points: { id: nu
       showGrid = parsed.showGrid ?? false
     } catch (e) {}
   }
-  const settings: ChartSettings = { chartDarkMode ,showGrid}
+  const settings: ChartSettings = { chartDarkMode, showGrid }
 
   // 将科学计数法转换为普通数字字符串
   const newData: DoubleResult = {
     k: fromScientific(data.k),
     m: fromScientific(data.m),
-    yStdErr: fromScientific(data.yStdErr), // 修正：原来错误使用了 data.kStdErr
+    yStdErr: fromScientific(data.yStdErr),
     kStdErr: fromScientific(data.kStdErr),
     mStdErr: fromScientific(data.mStdErr),
     corr: fromScientific(data.corr),
   }
 
   try {
-    const body: Communicate = {
+    const body: any = {
       config: config,
       data: newData,
       points: points,
       settings: settings,
     }
-    const response = await fetch('/api/chart', {
+
+    // 添加多条拟合线数据
+    if (fitLines && fitLines.length > 0) {
+      body.fitLines = fitLines.map((line) => ({
+        type: line.type,
+        name: line.name,
+        color: line.color,
+        points: line.data,
+        k: line.result && 'k' in line.result ? (line.result as DoubleResult).k : '0',
+        m: line.result && 'm' in line.result ? (line.result as DoubleResult).m : '0',
+        a: line.result && 'a' in line.result ? (line.result as ExponentialResult).a : '0',
+        b: line.result && 'b' in line.result ? (line.result as ExponentialResult).b : '0',
+        kStdErr: line.result && 'kStdErr' in line.result ? (line.result as DoubleResult).kStdErr : '0',
+        mStdErr: line.result && 'mStdErr' in line.result ? (line.result as DoubleResult).mStdErr : '0',
+        aStdErr: line.result && 'aStdErr' in line.result ? (line.result as ExponentialResult).aStdErr : '0',
+        bStdErr: line.result && 'bStdErr' in line.result ? (line.result as ExponentialResult).bStdErr : '0',
+        corr: line.result?.corr || '0',
+        yStdErr: line.result?.yStdErr || '0',
+      }))
+    }
+    // const res = await fetch("http://127.0.0.1:3001/api/test", {
+    //   method:'GET'
+    // })
+    // console.log(res)
+    const response = await fetch('http://127.0.0.1:3001/api/chart', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -81,7 +107,7 @@ const loadChart = async (data: DoubleResult, config: ChartData, points: { id: nu
 // 刷新当前图表（使用缓存的参数）
 const refreshChart = () => {
   if (currentData && currentConfig && currentPoints) {
-    loadChart(currentData, currentConfig, currentPoints)
+    loadChart(currentData, currentConfig, currentPoints, currentFitLines || undefined)
   } else {
     toast?.('没有可刷新的图表', { type: 'warning' })
   }

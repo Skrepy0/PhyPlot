@@ -3,3 +3,5 @@ flask-cors
 numpy
 scipy
 pandas
+matplotlib
+requests
