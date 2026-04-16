@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { inject, ref } from 'vue'
 import type { ToastFunction } from '~/composables/interface/toast'
-import type { DoubleResult, ExponentialResult, FitLine } from '~/composables/interface/double-result'
+import type { DoubleResult, ExponentialResult, LogisticResult, FitLine } from '~/composables/interface/double-result'
 import type { ChartData } from '~/composables/interface/chart-data'
 import { fromScientific } from '~/composables/tools'
 import type { ChartSettings } from '~/composables/interface/chart-settings'
@@ -65,13 +65,17 @@ const loadChart = async (data: DoubleResult, config: ChartData, points: { id: nu
         name: line.name,
         color: line.color,
         points: line.data,
-        k: line.result && 'k' in line.result ? (line.result as DoubleResult).k : '0',
+        k: line.result && 'k' in line.result ? (line.result as DoubleResult | LogisticResult).k : '0',
         m: line.result && 'm' in line.result ? (line.result as DoubleResult).m : '0',
         a: line.result && 'a' in line.result ? (line.result as ExponentialResult).a : '0',
         b: line.result && 'b' in line.result ? (line.result as ExponentialResult).b : '0',
         c: line.result && 'c' in line.result ? (line.result as ExponentialResult).c : '0',
-        kStdErr: line.result && 'kStdErr' in line.result ? (line.result as DoubleResult).kStdErr : '0',
+        L: line.result && 'L' in line.result ? (line.result as LogisticResult).L : '0',
+        x0: line.result && 'x0' in line.result ? (line.result as LogisticResult).x0 : '0',
+        kStdErr: line.result && 'kStdErr' in line.result ? (line.result as DoubleResult | LogisticResult).kStdErr : '0',
         mStdErr: line.result && 'mStdErr' in line.result ? (line.result as DoubleResult).mStdErr : '0',
+        LStdErr: line.result && 'LStdErr' in line.result ? (line.result as LogisticResult).LStdErr : '0',
+        x0StdErr: line.result && 'x0StdErr' in line.result ? (line.result as LogisticResult).x0StdErr : '0',
         aStdErr: line.result && 'aStdErr' in line.result ? (line.result as ExponentialResult).aStdErr : '0',
         bStdErr: line.result && 'bStdErr' in line.result ? (line.result as ExponentialResult).bStdErr : '0',
         corr: line.result?.corr || '0',

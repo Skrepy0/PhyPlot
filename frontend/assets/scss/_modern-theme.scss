@@ -1,7 +1,4 @@
-// 现代化物理实验图表主题
-// 科技感深色主题，支持响应式设计
-
-// 颜色变量系统
+@import '../scss/components/fonts.scss';
 :root {
   // 主色调 - 科技绿
   --primary-green: #2ecc71;
@@ -187,6 +184,8 @@
 
 body {
   font-family:
+    'HYTangMeiRen',
+    Comic,
     'Inter',
     'SF Pro Display',
     'Roboto',

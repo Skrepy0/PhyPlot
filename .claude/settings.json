@@ -1,0 +1,5 @@
+{
+  "permissions": {
+    "allow": ["Bash(npx ts-node *)", "Bash(node test_logistic.js)", "Bash(del test_logistic.ts test_logistic.js)"]
+  }
+}

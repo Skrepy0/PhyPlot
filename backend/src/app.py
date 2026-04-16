@@ -37,10 +37,15 @@ def get_chart():
                 m=safe_float(line_data.get("m", 0)),
                 a=safe_float(line_data.get("a", 0)),
                 b=safe_float(line_data.get("b", 0)),
+                c=safe_float(line_data.get("c", 0)),
+                L=safe_float(line_data.get("L", 0)),
+                x0=safe_float(line_data.get("x0", 0)),
                 k_error=safe_float(line_data.get("kStdErr", 0)),
                 m_error=safe_float(line_data.get("mStdErr", 0)),
                 a_error=safe_float(line_data.get("aStdErr", 0)),
                 b_error=safe_float(line_data.get("bStdErr", 0)),
+                L_error=safe_float(line_data.get("LStdErr", 0)),
+                x0_error=safe_float(line_data.get("x0StdErr", 0)),
                 corr=safe_float(line_data.get("corr", 0)),
                 y_std_err=safe_float(line_data.get("yStdErr", 0))
             )

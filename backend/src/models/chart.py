@@ -20,10 +20,14 @@ class FitLine:
     a: float = 0.0
     b: float = 0.0
     c: float = 0.0
+    L: float = 0.0  # 逻辑拟合参数：最大渐近值
+    x0: float = 0.0  # 逻辑拟合参数：中点位置
     k_error: float = 0.0
     m_error: float = 0.0
     a_error: float = 0.0
     b_error: float = 0.0
+    L_error: float = 0.0  # 逻辑拟合参数误差
+    x0_error: float = 0.0  # 逻辑拟合参数误差
     corr: float = 0.0
     y_std_err: float = 0.0
     name: str = ""
@@ -241,6 +245,13 @@ class Chart:
 
                     line_label = f"区域拟合线{region_fit_line} 横截距:{x_intercept}, 纵截距:{y_intercept}"
                     region_fit_line+=1
+                ax.plot(x_fit, y_fit, label=line_label,
+                        color=point_color, linewidth=2.5, zorder=2)
+            elif line.fit_type == 'logistic':
+                # 逻辑拟合: y = L / (1 + exp(-k * (x - x0)))
+                exponent = np.clip(-line.k * (x_fit - line.x0), -700, 700)
+                y_fit = line.L / (1 + np.exp(exponent))
+                line_label = line.name if line.name else f"逻辑拟合{i+1}"
                 ax.plot(x_fit, y_fit, label=line_label,
                         color=point_color, linewidth=2.5, zorder=2)
             else:

@@ -1,5 +1,5 @@
 import { Decimal } from 'decimal.js'
-import type { DoubleResult, ExponentialResult, FitLine } from '~/composables/interface/double-result'
+import type { DoubleResult, ExponentialResult, LogisticResult, FitLine } from '~/composables/interface/double-result'
 import type { ChartData } from '~/composables/interface/chart-data'
 import { getK } from '~/composables/math/get-k'
 import { getAveDec } from '~/composables/math/average'
@@ -7,6 +7,7 @@ import { format, toScientific } from '~/composables/tools'
 import { getKStdErr, getMStdErr, getYStdErr } from '~/composables/math/standard-error'
 import { getCorr } from '../math/getCorr'
 import { getExponentialFit } from '~/composables/math/exponential-fit'
+import { getLogisticFit } from '~/composables/math/logistic-fit'
 
 export const solve = async (
   res: Ref<DoubleResult>,
@@ -75,6 +76,32 @@ export const solveExponential = async (
   }
 }
 
+export const solveLogistic = async (
+  res: Ref<LogisticResult>,
+  config: Ref<ChartData>,
+  pointList: {
+    id: number
+    x: string
+    y: string
+  }[]
+) => {
+  let points: { x: string; y: string }[] = pointList.map((point) => {
+    return { x: point.x, y: point.y }
+  })
+
+  const result = await getLogisticFit(points)
+  res.value = {
+    L: result.L,
+    k: result.k,
+    x0: result.x0,
+    LStdErr: result.LStdErr,
+    kStdErr: result.kStdErr,
+    x0StdErr: result.x0StdErr,
+    corr: result.corr,
+    yStdErr: result.yStdErr,
+  }
+}
+
 export const solveMultipleLines = async (lines: FitLine[], config: Ref<ChartData>) => {
   const results: FitLine[] = []
 
@@ -103,6 +130,19 @@ export const solveMultipleLines = async (lines: FitLine[], config: Ref<ChartData
         yStdErr: '',
       })
       await solveExponential(tempResult, config, line.data)
+      lineResult.result = tempResult.value
+    } else if (line.type === 'logistic') {
+      const tempResult = ref<LogisticResult>({
+        L: '',
+        k: '',
+        x0: '',
+        LStdErr: '',
+        kStdErr: '',
+        x0StdErr: '',
+        corr: '',
+        yStdErr: '',
+      })
+      await solveLogistic(tempResult, config, line.data)
       lineResult.result = tempResult.value
     }
 

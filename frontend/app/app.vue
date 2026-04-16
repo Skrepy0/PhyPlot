@@ -58,9 +58,14 @@ provide('toast', toastAdd)
 <style lang="scss">
 @import '../assets/scss/_modern-theme.scss';
 @import '../assets/scss/components/tooltip.scss';
+@import '../assets/scss/components/fonts.scss';
 </style>
 
 <style scoped lang="scss">
+html,
+body {
+  font-family: Comic, DingLieZhuHai, Courier, monospace;
+}
 .context {
   display: flex;
   min-height: calc(100vh - 70px);

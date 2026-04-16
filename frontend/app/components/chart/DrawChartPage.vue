@@ -2,12 +2,12 @@
 import DataTable from '~/components/data-components/DataTable.vue'
 import { inject, ref } from 'vue'
 import Chart from '~/components/chart/Chart.vue'
-import { solve, solveExponential } from '~/composables/solve-data/double-data'
+import { solve, solveExponential, solveLogistic } from '~/composables/solve-data/double-data'
 import { verifyDataPoints } from '~/composables/tools'
 import { copy } from '~/composables/tools'
 import type { ToastFunction } from '~/composables/interface/toast'
 import type { ChartData } from '~/composables/interface/chart-data'
-import type { DoubleResult, ExponentialResult, FitLine } from '~/composables/interface/double-result'
+import type { DoubleResult, ExponentialResult, LogisticResult, FitLine } from '~/composables/interface/double-result'
 const props = defineProps({
   show: Boolean,
 })
@@ -78,7 +78,7 @@ const submit = async () => {
         })
         await solve(tempResult, configData, line.data)
         line.result = tempResult.value
-      } else {
+      } else if (line.type === 'exponential') {
         const tempResult = ref<ExponentialResult>({
           a: '',
           b: '',
@@ -90,6 +90,19 @@ const submit = async () => {
         })
         await solveExponential(tempResult, configData, line.data)
         line.result = tempResult.value
+      } else if (line.type === 'logistic') {
+        const tempResult = ref<LogisticResult>({
+          L: '',
+          k: '',
+          x0: '',
+          LStdErr: '',
+          kStdErr: '',
+          x0StdErr: '',
+          corr: '',
+          yStdErr: '',
+        })
+        await solveLogistic(tempResult, configData, line.data)
+        line.result = tempResult.value
       }
     }
 
@@ -99,7 +112,7 @@ const submit = async () => {
       if (mainLine) {
         if (mainLine.type === 'linear') {
           await solve(results, configData, mainLine.data)
-        } else {
+        } else if (mainLine.type === 'exponential') {
           const expResult = ref<ExponentialResult>({
             a: '',
             b: '',
@@ -117,6 +130,27 @@ const submit = async () => {
             kStdErr: expResult.value.bStdErr,
             mStdErr: expResult.value.aStdErr,
             corr: expResult.value.corr,
+          }
+        } else if (mainLine.type === 'logistic') {
+          const logisticResult = ref<LogisticResult>({
+            L: '',
+            k: '',
+            x0: '',
+            LStdErr: '',
+            kStdErr: '',
+            x0StdErr: '',
+            corr: '',
+            yStdErr: '',
+          })
+          await solveLogistic(logisticResult, configData, mainLine.data)
+          // 对于逻辑拟合，我们使用k参数作为主要斜率显示
+          results.value = {
+            k: logisticResult.value.k,
+            m: logisticResult.value.L,
+            yStdErr: logisticResult.value.yStdErr,
+            kStdErr: logisticResult.value.kStdErr,
+            mStdErr: logisticResult.value.LStdErr,
+            corr: logisticResult.value.corr,
           }
         }
 
@@ -182,7 +216,7 @@ const calculateFitLine = async (line: FitLine) => {
       })
       await solve(tempResult, configData, line.data)
       line.result = tempResult.value
-    } else {
+    } else if (line.type === 'exponential') {
       const tempResult = ref<ExponentialResult>({
         a: '',
         b: '',
@@ -193,6 +227,19 @@ const calculateFitLine = async (line: FitLine) => {
         yStdErr: '',
       })
       await solveExponential(tempResult, configData, line.data)
+      line.result = tempResult.value
+    } else if (line.type === 'logistic') {
+      const tempResult = ref<LogisticResult>({
+        L: '',
+        k: '',
+        x0: '',
+        LStdErr: '',
+        kStdErr: '',
+        x0StdErr: '',
+        corr: '',
+        yStdErr: '',
+      })
+      await solveLogistic(tempResult, configData, line.data)
       line.result = tempResult.value
     }
     toast?.('拟合计算完成', { type: 'success' })
@@ -297,6 +344,7 @@ const calculateFitLine = async (line: FitLine) => {
                         <select v-model="line.type" class="form-select">
                           <option value="linear">线性拟合</option>
                           <option value="exponential">指数拟合</option>
+                          <option value="logistic">逻辑拟合</option>
                         </select>
                       </div>
 
@@ -314,7 +362,7 @@ const calculateFitLine = async (line: FitLine) => {
                         <label class="form-label">点图例</label>
                         <input class="form-input" v-model="line.pointLegend" />
                       </div>
-                      <div class="form-row" v-if="line.type === 'exponential'">
+                      <div class="form-row" v-if="line.type !== 'linear'">
                         <label class="form-label">添加线性区域拟合直线</label>
                         <select v-model="line.drawLinearRegionFittingLine" class="form-select">
                           <option value="true">是</option>
@@ -363,7 +411,7 @@ const calculateFitLine = async (line: FitLine) => {
                 <label class="form-label">选择拟合线查看统计:</label>
                 <select v-model="selectedLineId" class="form-select">
                   <option v-for="line in fitLines" :key="line.id" :value="line.id">
-                    {{ line.name }} ({{ line.type === 'linear' ? '线性' : '指数' }})
+                    {{ line.name }} ({{ line.type === 'linear' ? '线性' : line.type === 'exponential' ? '指数' : '逻辑' }})
                   </option>
                 </select>
               </div>
@@ -393,6 +441,32 @@ const calculateFitLine = async (line: FitLine) => {
                             <span class="result-label">标准误差</span>
                             <span class="result-value" :title="(line.result as DoubleResult).yStdErr">
                               {{ (line.result as DoubleResult).yStdErr || '-' }}
+                            </span>
+                          </div>
+                        </template>
+                        <template v-else-if="line.type === 'logistic'">
+                          <div class="result-item" @click="copyValue((line.result as LogisticResult).L)">
+                            <span class="result-label">最大渐近值L</span>
+                            <span class="result-value" :title="(line.result as LogisticResult).L">
+                              {{ (line.result as LogisticResult).L || '-' }}
+                            </span>
+                          </div>
+                          <div class="result-item" @click="copyValue((line.result as LogisticResult).k)">
+                            <span class="result-label">增长率k</span>
+                            <span class="result-value" :title="(line.result as LogisticResult).k">
+                              {{ (line.result as LogisticResult).k || '-' }}
+                            </span>
+                          </div>
+                          <div class="result-item" @click="copyValue((line.result as LogisticResult).x0)">
+                            <span class="result-label">中点位置x₀</span>
+                            <span class="result-value" :title="(line.result as LogisticResult).x0">
+                              {{ (line.result as LogisticResult).x0 || '-' }}
+                            </span>
+                          </div>
+                          <div class="result-item" @click="copyValue((line.result as LogisticResult).yStdErr)">
+                            <span class="result-label">标准误差</span>
+                            <span class="result-value" :title="(line.result as LogisticResult).yStdErr">
+                              {{ (line.result as LogisticResult).yStdErr || '-' }}
                             </span>
                           </div>
                         </template>
@@ -430,6 +504,26 @@ const calculateFitLine = async (line: FitLine) => {
                             <span class="result-label">m误差</span>
                             <span class="result-value" :title="(line.result as DoubleResult).mStdErr">
                               {{ (line.result as DoubleResult).mStdErr || '-' }}
+                            </span>
+                          </div>
+                        </template>
+                        <template v-else-if="line.type === 'logistic'">
+                          <div class="result-item" @click="copyValue((line.result as LogisticResult).LStdErr)">
+                            <span class="result-label">L误差</span>
+                            <span class="result-value" :title="(line.result as LogisticResult).LStdErr">
+                              {{ (line.result as LogisticResult).LStdErr || '-' }}
+                            </span>
+                          </div>
+                          <div class="result-item" @click="copyValue((line.result as LogisticResult).kStdErr)">
+                            <span class="result-label">k误差</span>
+                            <span class="result-value" :title="(line.result as LogisticResult).kStdErr">
+                              {{ (line.result as LogisticResult).kStdErr || '-' }}
+                            </span>
+                          </div>
+                          <div class="result-item" @click="copyValue((line.result as LogisticResult).x0StdErr)">
+                            <span class="result-label">x₀误差</span>
+                            <span class="result-value" :title="(line.result as LogisticResult).x0StdErr">
+                              {{ (line.result as LogisticResult).x0StdErr || '-' }}
                             </span>
                           </div>
                         </template>

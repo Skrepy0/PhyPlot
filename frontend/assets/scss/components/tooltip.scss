@@ -1,78 +1,81 @@
-// 可配置变量
-$tooltip-bg: rgba(62, 156, 121, 0.7);
+// ===== 可配置变量 =====
+$tooltip-bg: rgba(62, 156, 121, 0.9);
 $tooltip-color: #fff;
 $tooltip-font-size: 12px;
-$tooltip-padding: 3px 8px;
+$tooltip-padding: 4px 10px;
 $tooltip-border-radius: 6px;
 $tooltip-arrow-size: 6px;
-$tooltip-offset: 8px; // 距离目标元素的偏移量
-$tooltip-transition-duration: 0.2s;
+$tooltip-offset: 8px;
+$tooltip-transition-duration: 0.18s;
 $tooltip-transition-timing: cubic-bezier(0.2, 0.9, 0.4, 1.1);
-$tooltip-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+$tooltip-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 
+// ===== 主体 =====
 [tooltip] {
   position: relative;
   cursor: help;
+  z-index: 1; // 👈 提升父级层级（关键）
 
   &::before {
     content: attr(tooltip);
     position: absolute;
     background-color: $tooltip-bg;
     color: $tooltip-color;
-    height: 25px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     font-size: $tooltip-font-size;
     padding: $tooltip-padding;
     border-radius: $tooltip-border-radius;
     white-space: nowrap;
-    z-index: 1000;
+    z-index: 999999; // 👈 拉满
     box-shadow: $tooltip-shadow;
+
     opacity: 0;
     visibility: hidden;
+
+    transform: translateX(-50%) scale(0.9);
+    transform-origin: bottom center;
+
     transition:
       opacity $tooltip-transition-duration $tooltip-transition-timing,
-      visibility $tooltip-transition-duration $tooltip-transition-timing,
-      transform $tooltip-transition-duration $tooltip-transition-timing;
-    transform: scale(0.9); // 初始缩放
-    pointer-events: none;
+      transform $tooltip-transition-duration $tooltip-transition-timing,
+      visibility $tooltip-transition-duration;
 
-    // white-space: normal;
-    // max-width: 200px;
-    // word-break: break-word;
+    pointer-events: none;
   }
 
   &::after {
     content: '';
     position: absolute;
     border: $tooltip-arrow-size solid transparent;
+
+    z-index: 999999;
+
     opacity: 0;
     visibility: hidden;
+
     transition:
-      opacity $tooltip-transition-duration $tooltip-transition-timing,
-      visibility $tooltip-transition-duration $tooltip-transition-timing;
+      opacity $tooltip-transition-duration,
+      visibility $tooltip-transition-duration;
+
     pointer-events: none;
   }
 
+  // ===== hover =====
   &:hover::before,
   &:hover::after {
     opacity: 1;
     visibility: visible;
   }
-  &:hover::before {
-    transform: scale(1);
-  }
 
-  &::before {
-    bottom: calc(100% + #{$tooltip-offset});
-    left: 50%;
-    transform: translateX(-50%) scale(0.9);
-    transform-origin: bottom center;
-  }
   &:hover::before {
     transform: translateX(-50%) scale(1);
   }
+
+  // ===== 默认（上）=====
+  &::before {
+    bottom: calc(100% + #{$tooltip-offset});
+    left: 50%;
+  }
+
   &::after {
     bottom: calc(100% + #{$tooltip-offset} - #{$tooltip-arrow-size});
     left: 50%;
@@ -80,60 +83,75 @@ $tooltip-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     border-top-color: $tooltip-bg;
   }
 
-  &[data-position='bottom']::before {
-    top: calc(100% + #{$tooltip-offset});
-    bottom: auto;
-    left: 50%;
-    transform: translateX(-50%) scale(0.9);
-    transform-origin: top center;
-  }
-  &[data-position='bottom']:hover::before {
-    transform: translateX(-50%) scale(1);
-  }
-  &[data-position='bottom']::after {
-    top: calc(100% + #{$tooltip-offset} - #{$tooltip-arrow-size});
-    bottom: auto;
-    left: 50%;
-    transform: translateX(-50%);
-    border-bottom-color: $tooltip-bg;
-    border-top-color: transparent;
+  // ===== bottom =====
+  &[data-position='bottom'] {
+    &::before {
+      top: calc(100% + #{$tooltip-offset});
+      bottom: auto;
+      left: 50%;
+      transform: translateX(-50%) scale(0.9);
+      transform-origin: top center;
+    }
+
+    &:hover::before {
+      transform: translateX(-50%) scale(1);
+    }
+
+    &::after {
+      top: calc(100% + #{$tooltip-offset} - #{$tooltip-arrow-size});
+      bottom: auto;
+      left: 50%;
+      transform: translateX(-50%);
+      border-bottom-color: $tooltip-bg;
+      border-top-color: transparent;
+    }
   }
 
-  &[data-position='left']::before {
-    right: calc(100% + #{$tooltip-offset});
-    left: auto;
-    top: 50%;
-    transform: translateY(-50%) scale(0.9);
-    transform-origin: right center;
-  }
-  &[data-position='left']:hover::before {
-    transform: translateY(-50%) scale(1);
-  }
-  &[data-position='left']::after {
-    right: calc(100% + #{$tooltip-offset} - #{$tooltip-arrow-size});
-    left: auto;
-    top: 50%;
-    transform: translateY(-50%);
-    border-left-color: $tooltip-bg;
-    border-top-color: transparent;
+  // ===== left =====
+  &[data-position='left'] {
+    &::before {
+      right: calc(100% + #{$tooltip-offset});
+      left: auto;
+      top: 50%;
+      transform: translateY(-50%) scale(0.9);
+      transform-origin: right center;
+    }
+
+    &:hover::before {
+      transform: translateY(-50%) scale(1);
+    }
+
+    &::after {
+      right: calc(100% + #{$tooltip-offset} - #{$tooltip-arrow-size});
+      left: auto;
+      top: 50%;
+      transform: translateY(-50%);
+      border-left-color: $tooltip-bg;
+      border-top-color: transparent;
+    }
   }
 
-  &[data-position='right']::before {
-    left: calc(100% + #{$tooltip-offset});
-    right: auto;
-    top: 50%;
-    transform: translateY(-50%) scale(0.9);
-    transform-origin: left center;
-  }
-  &[data-position='right']:hover::before {
-    transform: translateY(-50%) scale(1);
-  }
-  &[data-position='right']::after {
-    left: calc(100% + #{$tooltip-offset} - #{$tooltip-arrow-size});
-    right: auto;
-    top: 50%;
-    transform: translateY(-50%);
-    border-right-color: $tooltip-bg;
-    border-top-color: transparent;
+  // ===== right =====
+  &[data-position='right'] {
+    &::before {
+      left: calc(100% + #{$tooltip-offset});
+      right: auto;
+      top: 50%;
+      transform: translateY(-50%) scale(0.9);
+      transform-origin: left center;
+    }
+
+    &:hover::before {
+      transform: translateY(-50%) scale(1);
+    }
+
+    &::after {
+      left: calc(100% + #{$tooltip-offset} - #{$tooltip-arrow-size});
+      right: auto;
+      top: 50%;
+      transform: translateY(-50%);
+      border-right-color: $tooltip-bg;
+      border-top-color: transparent;
+    }
   }
 }
