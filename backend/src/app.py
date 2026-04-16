@@ -60,9 +60,7 @@ def get_chart():
 
     chart = Chart(
         k=safe_float(data["k"]),
-        m=safe_float(data["m"]),
-        k_error=safe_float(data["kStdErr"]),
-        m_error=safe_float(data["mStdErr"]),
+        m=safe_float(data["m"]),# 这两个备用
         corr=safe_float(data["corr"]),
         confidence=float(config["confidence"].split("%")[0])/100,
         title=config["chartTitle"],

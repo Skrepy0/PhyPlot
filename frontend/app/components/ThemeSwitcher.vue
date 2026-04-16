@@ -6,7 +6,11 @@ const { currentTheme, effectiveTheme, toggleTheme, getThemeIcon, getThemeName, i
 
 <template>
   <div class="theme-switcher" title="切换主题 (当前: {{ getThemeName(effectiveTheme) }})">
-    <button class="theme-btn" @click="toggleTheme" :aria-label="`切换到${getThemeName(effectiveTheme === 'light' ? 'dark' : effectiveTheme === 'dark' ? 'auto' : 'light')}主题`">
+    <button
+      class="theme-btn"
+      @click="toggleTheme"
+      :aria-label="`切换到${getThemeName(effectiveTheme === 'light' ? 'dark' : effectiveTheme === 'dark' ? 'auto' : 'light')}主题`"
+    >
       <span class="theme-icon">{{ getThemeIcon(currentTheme) }}</span>
       <span class="theme-name">{{ getThemeName(effectiveTheme) }}</span>
       <span class="theme-arrow">↻</span>

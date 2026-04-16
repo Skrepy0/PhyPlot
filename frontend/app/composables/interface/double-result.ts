@@ -10,6 +10,7 @@ export interface DoubleResult {
 export interface ExponentialResult {
   a: string
   b: string
+  c: string
   aStdErr: string
   bStdErr: string
   corr: string
@@ -25,4 +26,5 @@ export interface FitLine {
   color: string
   legend?: string
   pointLegend?: string
+  drawLinearRegionFittingLine?: Boolean
 }

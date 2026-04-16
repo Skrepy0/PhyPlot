@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { inject, ref, onMounted } from 'vue'
-import type { ToastFunction, ToastOptions } from '~/composables/interface/toast'
+import { inject, ref } from 'vue'
+import type { ToastFunction } from '~/composables/interface/toast'
 import type { DoubleResult, ExponentialResult, FitLine } from '~/composables/interface/double-result'
 import type { ChartData } from '~/composables/interface/chart-data'
-import type { Communicate } from '~/composables/interface/communicate'
 import { fromScientific } from '~/composables/tools'
 import type { ChartSettings } from '~/composables/interface/chart-settings'
+import { getRegionFitLine } from '~/composables/math/regionFitLine'
 
 const toast = inject<ToastFunction>('toast')
 
@@ -46,7 +46,7 @@ const loadChart = async (data: DoubleResult, config: ChartData, points: { id: nu
     m: fromScientific(data.m),
     yStdErr: fromScientific(data.yStdErr),
     kStdErr: fromScientific(data.kStdErr),
-    mStdErr: fromScientific(data.mStdErr),
+    mStdErr: fromScientific(data.mStdErr), // 上面全是备用
     corr: fromScientific(data.corr),
   }
 
@@ -69,6 +69,7 @@ const loadChart = async (data: DoubleResult, config: ChartData, points: { id: nu
         m: line.result && 'm' in line.result ? (line.result as DoubleResult).m : '0',
         a: line.result && 'a' in line.result ? (line.result as ExponentialResult).a : '0',
         b: line.result && 'b' in line.result ? (line.result as ExponentialResult).b : '0',
+        c: line.result && 'c' in line.result ? (line.result as ExponentialResult).c : '0',
         kStdErr: line.result && 'kStdErr' in line.result ? (line.result as DoubleResult).kStdErr : '0',
         mStdErr: line.result && 'mStdErr' in line.result ? (line.result as DoubleResult).mStdErr : '0',
         aStdErr: line.result && 'aStdErr' in line.result ? (line.result as ExponentialResult).aStdErr : '0',
@@ -76,11 +77,37 @@ const loadChart = async (data: DoubleResult, config: ChartData, points: { id: nu
         corr: line.result?.corr || '0',
         yStdErr: line.result?.yStdErr || '0',
       }))
+
+      fitLines
+        .filter((line: FitLine) => line.drawLinearRegionFittingLine)
+        .forEach( (line: FitLine) => {
+          const points = line.data
+          points.map((value) => {
+            x: value.x
+            y: value.y
+          })
+          const rfl = getRegionFitLine(points)
+          const k: string = rfl.k
+          const b: string = rfl.m
+          const newLine = {
+            type: 'linear',
+            name: '',
+            color: line.color,
+            k: k,
+            m: b,
+            a: '0',
+            b: '0',
+            c: '0',
+            kStdErr: '0',
+            mStdErr: '0',
+            aStdErr: '0',
+            bStdErr: '0',
+            corr: '0',
+            yStdErr: '0',
+          }
+          body.fitLines.push(newLine)
+        })
     }
-    // const res = await fetch("http://127.0.0.1:3001/api/test", {
-    //   method:'GET'
-    // })
-    // console.log(res)
     const response = await fetch('http://127.0.0.1:3001/api/chart', {
       method: 'POST',
       headers: {
@@ -167,7 +194,13 @@ defineExpose({ loadChart, refreshChart })
       </div>
 
       <div class="chart-footer">
-        <button v-if="imageSrc && !loading" class="action-btn action-btn--download" @click="downloadChart" title="下载图表" aria-label="下载图表">
+        <button
+          v-if="imageSrc && !loading"
+          class="action-btn action-btn--download"
+          @click="downloadChart"
+          title="下载图表"
+          aria-label="下载图表"
+        >
           <span class="btn-icon">⬇</span>
           <span class="btn-text">下载</span>
         </button>
@@ -218,7 +251,9 @@ defineExpose({ loadChart, refreshChart })
       border-radius: inherit;
       padding: 2px;
       background: linear-gradient(135deg, var(--primary-green), var(--accent-blue), var(--primary-green));
-      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0);
       mask-composite: xor;
       pointer-events: none;
       animation: border-flow 4s linear infinite;
@@ -416,7 +451,8 @@ defineExpose({ loadChart, refreshChart })
 }
 
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
     transform: scale(1);
   }

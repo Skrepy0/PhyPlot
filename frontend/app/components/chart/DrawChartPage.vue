@@ -82,6 +82,7 @@ const submit = async () => {
         const tempResult = ref<ExponentialResult>({
           a: '',
           b: '',
+          c: '',
           aStdErr: '',
           bStdErr: '',
           corr: '',
@@ -102,6 +103,7 @@ const submit = async () => {
           const expResult = ref<ExponentialResult>({
             a: '',
             b: '',
+            c: '',
             aStdErr: '',
             bStdErr: '',
             corr: '',
@@ -139,6 +141,7 @@ const addFitLine = () => {
       .padStart(6, '0')}`,
     legend: `拟合线${nextLineId.value - 1}`,
     pointLegend: '数据点',
+    drawLinearRegionFittingLine: false,
   }
   fitLines.value.push(newLine)
   selectedLineId.value = newLine.id
@@ -183,6 +186,7 @@ const calculateFitLine = async (line: FitLine) => {
       const tempResult = ref<ExponentialResult>({
         a: '',
         b: '',
+        c: '',
         aStdErr: '',
         bStdErr: '',
         corr: '',
@@ -309,6 +313,13 @@ const calculateFitLine = async (line: FitLine) => {
                       <div class="form-row">
                         <label class="form-label">点图例</label>
                         <input class="form-input" v-model="line.pointLegend" />
+                      </div>
+                      <div class="form-row" v-if="line.type === 'exponential'">
+                        <label class="form-label">添加线性区域拟合直线</label>
+                        <select v-model="line.drawLinearRegionFittingLine" class="form-select">
+                          <option value="true">是</option>
+                          <option value="false">否</option>
+                        </select>
                       </div>
                     </div>
 

@@ -119,6 +119,6 @@ export function fromScientific(input: string): string {
 
 export function verifyDataPoints(points: { id: number; x: string; y: string }[]): boolean {
   const pointSet = new Set<string>()
-  points.forEach(point => pointSet.add(point.x))
+  points.forEach((point) => pointSet.add(point.x))
   return pointSet.size === points.length
 }

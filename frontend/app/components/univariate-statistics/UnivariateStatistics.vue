@@ -274,7 +274,7 @@ const copyValue = async (val: string | number): Promise<void> => {
   background: var(--glass-bg);
   border: 1px solid var(--border-secondary);
   color: var(--text-primary);
-  option{
+  option {
     background-color: var(--glass-bg);
   }
   border-radius: var(--radius-md);

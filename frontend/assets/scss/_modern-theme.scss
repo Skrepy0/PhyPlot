@@ -54,7 +54,7 @@
 }
 
 // 暗色主题增强
-[data-theme="dark"] {
+[data-theme='dark'] {
   --bg-primary: #0a0f14;
   --bg-secondary: #151a24;
   --bg-tertiary: #1f2433;
@@ -62,7 +62,7 @@
 }
 
 // 明亮主题
-[data-theme="light"] {
+[data-theme='light'] {
   // 主色调 - 科技绿（稍作调整以适应浅色背景）
   --primary-green: #27ae60;
   --primary-green-dark: #219a52;
@@ -115,7 +115,8 @@
 
   // 表单元素调整
   .form-group {
-    input, select {
+    input,
+    select {
       background: rgba(39, 174, 96, 0.05);
       border-color: var(--border-secondary);
       color: var(--text-primary);
@@ -185,7 +186,13 @@
 }
 
 body {
-  font-family: 'Inter', 'SF Pro Display', 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family:
+    'Inter',
+    'SF Pro Display',
+    'Roboto',
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
   background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 50%, var(--bg-tertiary) 100%);
   color: var(--text-primary);
   line-height: 1.6;
@@ -228,7 +235,9 @@ body {
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
 
     &:hover {
-      box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6), var(--shadow-glow);
+      box-shadow:
+        0 16px 48px rgba(0, 0, 0, 0.6),
+        var(--shadow-glow);
     }
   }
 
@@ -242,7 +251,9 @@ body {
       border-radius: inherit;
       padding: 2px;
       background: linear-gradient(135deg, var(--primary-green), var(--accent-blue), var(--primary-green));
-      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0);
       mask-composite: xor;
       pointer-events: none;
       animation: border-flow 4s linear infinite;
@@ -256,8 +267,8 @@ body {
   grid-template-columns: 320px 1fr;
   grid-template-rows: 1fr auto;
   grid-template-areas:
-    "sidebar main"
-    "sidebar results";
+    'sidebar main'
+    'sidebar results';
   min-height: 100vh;
   gap: 20px;
   padding: 20px;
@@ -272,9 +283,9 @@ body {
     grid-template-columns: 1fr;
     grid-template-rows: auto 1fr auto;
     grid-template-areas:
-      "header"
-      "main"
-      "results";
+      'header'
+      'main'
+      'results';
     gap: 12px;
     padding: 12px;
   }
@@ -374,7 +385,8 @@ body {
     margin-bottom: 4px;
   }
 
-  input, select {
+  input,
+  select {
     background: rgba(255, 255, 255, 0.05);
     border: 2px solid var(--border-secondary);
     border-radius: var(--radius-md);
@@ -644,7 +656,8 @@ data-table {
       width: 100%;
       border-collapse: collapse;
 
-      th, td {
+      th,
+      td {
         padding: 12px 16px;
         text-align: left;
         border-bottom: 1px solid var(--glass-border);
@@ -665,7 +678,8 @@ data-table {
 
 // 动画关键帧
 @keyframes border-flow {
-  0%, 100% {
+  0%,
+  100% {
     background-position: 0% 50%;
   }
   50% {
@@ -685,7 +699,8 @@ data-table {
 }
 
 @keyframes pulse-glow {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow: 0 0 20px rgba(46, 204, 113, 0.3);
   }
   50% {
@@ -745,7 +760,8 @@ data-table {
   .form-group {
     margin-bottom: 12px;
 
-    input, select {
+    input,
+    select {
       padding: 10px 12px;
       font-size: 16px; // 防止iOS缩放
     }

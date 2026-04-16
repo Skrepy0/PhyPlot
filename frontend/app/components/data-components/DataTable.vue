@@ -9,7 +9,7 @@ type Row = SingleRow | DoubleRow
 const dialog = inject<(options: DialogOptions) => Promise<boolean>>('dialog')
 const toast = inject<ToastFunction>('toast')
 const numberRegex = /^-?\d+(\.\d+)?([eE][-+]?\d+)?$/
-const inputStart = ref<HTMLInputElement | null>(null);
+const inputStart = ref<HTMLInputElement | null>(null)
 const props = defineProps<{
   variableType: 'single' | 'double'
   modelValue?: Row[]
@@ -119,7 +119,6 @@ const saveEdit = (id: number) => {
     ;(rows.value[index] as DoubleRow).y = editBuffer.value.y ?? '0'
   }
   cancelEdit()
-
 }
 
 const cancelEdit = () => {
@@ -185,8 +184,7 @@ const commitAdd = () => {
       autoFocus = JSON.parse(saved).autoFocus
     } catch (e) {}
   }
-  if (autoFocus)
-    inputStart.value?.focus()// 自动对焦
+  if (autoFocus) inputStart.value?.focus() // 自动对焦
 }
 
 const resetData = () => {
@@ -213,7 +211,74 @@ const clearAll = async () => {
 
   toast?.('数据已清空', { type: 'success' })
 }
+// 在现有 ref 声明后面添加
+const fileInputRef = ref<HTMLInputElement | null>(null)
 
+// 实现 loadData
+const loadData = async (event: Event) => {
+  // 如果是按钮点击（event.target 是按钮，没有 files 属性），则触发隐藏 input
+  const target = event.target as HTMLElement
+  if (target.tagName !== 'INPUT' || (target as HTMLInputElement).type !== 'file') {
+    fileInputRef.value?.click()
+    return
+  }
+
+  // 来自 file input 的 change 事件
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
+
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    try {
+      const content = e.target?.result as string
+      const importedData = JSON.parse(content)
+
+      // 验证数据格式
+      if (!Array.isArray(importedData)) {
+        toast?.('导入的数据必须是数组格式', { type: 'error' })
+        return
+      }
+
+      // 根据 variableType 验证并转换每一行
+      const newRows: Row[] = []
+      for (const item of importedData) {
+        if (props.variableType === 'single') {
+          if (item.value === undefined) {
+            toast?.('单变量数据缺少 value 字段', { type: 'error' })
+            return
+          }
+          newRows.push({
+            id: typeof item.id === 'number' ? item.id : Date.now() + Math.random(),
+            value: String(item.value)
+          })
+        } else {
+          if (item.x === undefined || item.y === undefined) {
+            toast?.('双变量数据缺少 x 或 y 字段', { type: 'error' })
+            return
+          }
+          newRows.push({
+            id: typeof item.id === 'number' ? item.id : Date.now() + Math.random(),
+            x: String(item.x),
+            y: String(item.y)
+          })
+        }
+      }
+
+      // 替换现有数据
+      rows.value = newRows
+      nextId = getNextId()  // 重新计算下一个可用 ID
+      toast?.(`成功导入 ${newRows.length} 条数据`, { type: 'success' })
+
+      // 清空 file input 的值，以便再次导入同一个文件时能触发 change
+      input.value = ''
+    } catch (err) {
+      console.error(err)
+      toast?.('JSON 解析失败，请检查文件格式', { type: 'error' })
+    }
+  }
+  reader.readAsText(file, 'UTF-8')
+}
 const downloadData = () => {
   if (rows.value.length === 0) {
     toast?.('当前没有数据可下载', { type: 'warning' })
@@ -305,6 +370,8 @@ defineExpose({ addRow, deleteRow, resetData })
         <button class="add-btn" @click="commitAdd">+ 添加</button>
         <button class="clear-btn" @click="clearAll">清空</button>
         <button class="download-btn" @click="downloadData">下载数据</button>
+        <button class="load-btn" @click="loadData">导入数据</button>
+        <input type="file" accept=".json" ref="fileInputRef" style="display: none" @change="loadData" />
       </div>
     </div>
   </div>
@@ -628,6 +695,7 @@ defineExpose({ addRow, deleteRow, resetData })
     transform: translateY(0);
   }
 }
+.load-btn,
 .download-btn {
   background: transparent;
   border: 1px solid rgba(46, 204, 113, 0.4);

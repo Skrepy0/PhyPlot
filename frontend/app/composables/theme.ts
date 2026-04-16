@@ -47,20 +47,28 @@ export function useTheme() {
   // 获取主题图标
   const getThemeIcon = (theme: Theme): string => {
     switch (theme) {
-      case 'light': return '☀️'
-      case 'dark': return '🌙'
-      case 'auto': return '💻'
-      default: return '💻'
+      case 'light':
+        return '☀️'
+      case 'dark':
+        return '🌙'
+      case 'auto':
+        return '💻'
+      default:
+        return '💻'
     }
   }
 
   // 获取主题名称
   const getThemeName = (theme: Theme): string => {
     switch (theme) {
-      case 'light': return '明亮'
-      case 'dark': return '黑暗'
-      case 'auto': return '跟随系统'
-      default: return '跟随系统'
+      case 'light':
+        return '明亮'
+      case 'dark':
+        return '黑暗'
+      case 'auto':
+        return '跟随系统'
+      default:
+        return '跟随系统'
     }
   }
 
@@ -94,6 +102,6 @@ export function useTheme() {
     getThemeName,
     isDark: computed(() => effectiveTheme.value === 'dark'),
     isLight: computed(() => effectiveTheme.value === 'light'),
-    isAuto: computed(() => currentTheme.value === 'auto')
+    isAuto: computed(() => currentTheme.value === 'auto'),
   }
 }

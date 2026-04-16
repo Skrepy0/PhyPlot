@@ -54,10 +54,7 @@ onMounted(() => {
             <span class="setting-label">界面主题</span>
             <span class="setting-desc">当前: {{ getThemeName(effectiveTheme) }}</span>
           </div>
-          <ToggleSwitch
-            :modelValue="effectiveTheme === 'dark'"
-            @update:modelValue="(val) => setTheme(val ? 'dark' : 'light')"
-          />
+          <ToggleSwitch :modelValue="effectiveTheme === 'dark'" @update:modelValue="(val) => setTheme(val ? 'dark' : 'light')" />
         </div>
         <div class="setting-item">
           <div class="setting-info" tooltip="开启后,添加x,y数据点并提交后,自动聚焦到x值的输入框,方便下次输入">
@@ -150,7 +147,6 @@ onMounted(() => {
   flex-direction: column;
   gap: 4px;
   cursor: help;
-
 }
 
 .setting-label {
@@ -163,7 +159,6 @@ onMounted(() => {
   font-size: 0.8rem;
   color: var(--text-secondary);
 }
-
 
 .submit-btn-container {
   display: flex;

@@ -67,17 +67,15 @@ export const solveExponential = async (
   res.value = {
     a: result.a,
     b: result.b,
+    c: result.c,
     aStdErr: result.aStdErr,
     bStdErr: result.bStdErr,
     corr: result.corr,
-    yStdErr: result.yStdErr
+    yStdErr: result.yStdErr,
   }
 }
 
-export const solveMultipleLines = async (
-  lines: FitLine[],
-  config: Ref<ChartData>
-) => {
+export const solveMultipleLines = async (lines: FitLine[], config: Ref<ChartData>) => {
   const results: FitLine[] = []
 
   for (const line of lines) {
@@ -85,13 +83,24 @@ export const solveMultipleLines = async (
 
     if (line.type === 'linear') {
       const tempResult = ref<DoubleResult>({
-        k: '', m: '', yStdErr: '', kStdErr: '', mStdErr: '', corr: ''
+        k: '',
+        m: '',
+        yStdErr: '',
+        kStdErr: '',
+        mStdErr: '',
+        corr: '',
       })
       await solve(tempResult, config, line.data)
       lineResult.result = tempResult.value
     } else if (line.type === 'exponential') {
       const tempResult = ref<ExponentialResult>({
-        a: '', b: '', aStdErr: '', bStdErr: '', corr: '', yStdErr: ''
+        a: '',
+        b: '',
+        c: '',
+        aStdErr: '',
+        bStdErr: '',
+        corr: '',
+        yStdErr: '',
       })
       await solveExponential(tempResult, config, line.data)
       lineResult.result = tempResult.value

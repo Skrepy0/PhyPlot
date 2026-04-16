@@ -65,7 +65,7 @@ provide('toast', toastAdd)
   display: flex;
   min-height: calc(100vh - 70px);
   margin-top: 70px;
-
+  overflow-x: auto;
   :deep(.sidebar) {
     width: 260px;
     flex-shrink: 0;
