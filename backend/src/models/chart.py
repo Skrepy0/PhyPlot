@@ -174,18 +174,23 @@ class Chart:
         # 绘制多条拟合线
         param_texts = []
 
-        # 绘制主拟合线（如果存在）
-        if self.points and self.k != 0.0:
+        # 绘制拟合线
+        # 如果有fit_lines，只绘制fit_lines；否则绘制主拟合线（向后兼容）
+        if self.fit_lines:
+            # 只绘制fit_lines，不绘制主拟合线
+            pass  # 跳过主拟合线绘制，直接绘制fit_lines
+        elif self.points and self.k != 0.0:
+            # 向后兼容：如果没有fit_lines但有主拟合线参数，绘制主拟合线
             x_line = np.linspace(x_min, x_max, 200)
             y_line = self.k * x_line + self.m
             ax.plot(x_line, y_line,
-                    label=f"{self.line_legend}: y = {self.k:.4f}x + {self.m:.4f}",
+                    label=self.line_legend,
                     color=self.colors['line'],
                     linewidth=2.5,
                     linestyle='-',
                     zorder=2)
 
-        # 绘制额外的拟合线
+        # 绘制拟合线（包括fit_lines或主拟合线）
         for i, line in enumerate(self.fit_lines):
             if not line.points:
                 continue
@@ -214,10 +219,10 @@ class Chart:
 
             if line.fit_type == 'linear':
                 y_fit = line.k * x_fit + line.m
-                line_label = f"{line.name}: y = {line.k:.4f}x + {line.m:.4f}" if line.name else f"线性拟合{i+1}: y = {line.k:.4f}x + {line.m:.4f}"
+                line_label = line.name if line.name else f"线性拟合{i+1}"
             else:  # exponential
                 y_fit = line.a * np.exp(line.b * x_fit)
-                line_label = f"{line.name}: y = {line.a:.4f}e^({line.b:.4f}x)" if line.name else f"指数拟合{i+1}: y = {line.a:.4f}e^({line.b:.4f}x)"
+                line_label = line.name if line.name else f"指数拟合{i+1}"
 
             ax.plot(x_fit, y_fit,
                     label=line_label,
@@ -257,54 +262,7 @@ class Chart:
         if self.show_grid:
             ax.grid(True, linestyle='--', linewidth=0.8, alpha=0.5, color=self.colors['grid'])
 
-        # 参数信息框
-        if show_params:
-            text_parts = ["拟合参数"]
-
-            # 主拟合线参数
-            if self.points and self.k != 0.0:
-                text_parts.append(f"主拟合线:")
-                text_parts.append(f"  k = {self.k:.4f} ± {self.k_error:.4f}")
-                text_parts.append(f"  m = {self.m:.4f} ± {self.m_error:.4f}")
-                text_parts.append(f"  r = {self.corr:.4f}")
-                text_parts.append("")
-
-            # 额外拟合线参数
-            for i, line in enumerate(self.fit_lines):
-                if line.name:
-                    text_parts.append(f"{line.name}:")
-                else:
-                    text_parts.append(f"拟合线{i+1}:")
-
-                if line.fit_type == 'linear':
-                    text_parts.append(f"  k = {line.k:.4f} ± {line.k_error:.4f}")
-                    text_parts.append(f"  m = {line.m:.4f} ± {line.m_error:.4f}")
-                else:
-                    text_parts.append(f"  a = {line.a:.4f} ± {line.a_error:.4f}")
-                    text_parts.append(f"  b = {line.b:.4f} ± {line.b_error:.4f}")
-
-                text_parts.append(f"  r = {line.corr:.4f}")
-                text_parts.append("")
-
-            if len(text_parts) > 1:
-                text_parts.pop()  # 移除最后一个空行
-
-            text = "\n".join(text_parts)
-
-            bbox_props = dict(
-                boxstyle="round,pad=0.5",
-                facecolor=self.colors['param_bg'],
-                edgecolor=self.colors['line'],
-                alpha=0.9,
-                linewidth=1.5
-            )
-            ax.text(0.02, 0.98, text,
-                    transform=ax.transAxes,
-                    verticalalignment='top',
-                    fontsize=9,
-                    color=self.colors['param_text'],
-                    bbox=bbox_props,
-                    zorder=10)
+        # 参数信息框已移除
 
         # 紧凑布局
         plt.tight_layout()

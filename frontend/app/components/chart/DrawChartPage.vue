@@ -50,7 +50,7 @@ const submit = async () => {
   }
 
   // 检查所有拟合线是否都有足够的数据
-  const incompleteLines = fitLines.value.filter(line => line.data.length < 2)
+  const incompleteLines = fitLines.value.filter((line) => line.data.length < 2)
   if (incompleteLines.length > 0) {
     toast?.('所有拟合线至少需要2个数据点', { type: 'warning' })
     return
@@ -134,9 +134,11 @@ const addFitLine = () => {
     name: `拟合线${nextLineId.value - 1}`,
     data: [],
     result: null,
-    color: `#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')}`,
+    color: `#${Math.floor(Math.random() * 16777215)
+      .toString(16)
+      .padStart(6, '0')}`,
     legend: `拟合线${nextLineId.value - 1}`,
-    pointLegend: '数据点'
+    pointLegend: '数据点',
   }
   fitLines.value.push(newLine)
   selectedLineId.value = newLine.id
@@ -194,7 +196,6 @@ const calculateFitLine = async (line: FitLine) => {
     toast?.(`计算失败: ${error instanceof Error ? error.message : '未知错误'}`, { type: 'error' })
   }
 }
-
 </script>
 
 <template>
@@ -258,7 +259,6 @@ const calculateFitLine = async (line: FitLine) => {
               </div>
             </div>
 
-
             <!-- 拟合线管理 -->
             <div class="fit-lines-management">
               <div class="fit-lines-header">
@@ -281,7 +281,7 @@ const calculateFitLine = async (line: FitLine) => {
                 </div>
 
                 <div v-if="selectedLineId" class="fit-line-configuration">
-                  <div v-for="line in fitLines.filter(l => l.id === selectedLineId)" :key="line.id" class="active-line-config">
+                  <div v-for="line in fitLines.filter((l) => l.id === selectedLineId)" :key="line.id" class="active-line-config">
                     <div class="config-section">
                       <div class="form-row">
                         <label class="form-label">拟合线名称</label>
@@ -318,11 +318,7 @@ const calculateFitLine = async (line: FitLine) => {
                     </div>
 
                     <div class="calculation-section">
-                      <button
-                        class="calculate-btn"
-                        @click="calculateFitLine(line)"
-                        :disabled="line.data.length < 2"
-                      >
+                      <button class="calculate-btn" @click="calculateFitLine(line)" :disabled="line.data.length < 2">
                         {{ line.result ? '重新计算' : '计算拟合' }}
                       </button>
                     </div>
@@ -363,10 +359,9 @@ const calculateFitLine = async (line: FitLine) => {
 
               <!-- 统计结果显示 -->
               <div v-if="selectedLineId" class="statistics-content">
-
                 <!-- 拟合线统计 -->
                 <div class="additional-line-statistics">
-                  <div v-for="line in fitLines.filter(l => l.id === selectedLineId)" :key="line.id">
+                  <div v-for="line in fitLines.filter((l) => l.id === selectedLineId)" :key="line.id">
                     <h4>{{ line.name }} 统计结果</h4>
                     <div v-if="line.result" class="results-container">
                       <div class="results-list">
@@ -473,28 +468,35 @@ const calculateFitLine = async (line: FitLine) => {
 
 <style scoped lang="scss">
 @use '../../../assets/scss/components/card';
-@import '../../../assets/scss/components/colors';
+@import '../../../assets/scss/_modern-theme.scss';
+
 .draw-chart-page {
   width: 100%;
-  padding: 16px;
+  padding: 20px;
 }
 
 .cards-wrapper {
   display: flex;
-  gap: 16px;
+  gap: 20px;
   width: 100%;
 }
 
 .config-card {
-  background: rgba(10, 15, 12, 0.92);
-  backdrop-filter: blur(12px);
-  border-radius: 15px;
-  border: 1px solid rgba(46, 204, 113, 0.3);
-  box-shadow: $shadow;
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--blur-strength));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-primary);
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 20px;
+  padding: 24px;
+  transition: var(--transition-normal);
+
+  &:hover {
+    border-color: var(--border-primary);
+    box-shadow: var(--shadow-primary), var(--shadow-glow);
+  }
 }
 
 /* 三层结构 */
@@ -502,7 +504,7 @@ const calculateFitLine = async (line: FitLine) => {
   display: flex;
   flex-direction: column;
   height: 100%;
-  gap: 12px;
+  gap: 16px;
 }
 
 /* 表单 */
@@ -522,48 +524,141 @@ const calculateFitLine = async (line: FitLine) => {
   flex-shrink: 0;
   display: flex;
   justify-content: center;
-  padding-top: 10px;
+  padding-top: 16px;
+}
+
+.submit-btn {
+  padding: 14px 28px;
+  background: linear-gradient(135deg, var(--primary-green), var(--primary-green-dark));
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-normal);
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: var(--transition-normal);
+  }
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(46, 204, 113, 0.3);
+  }
+
+  &:hover::before {
+    left: 100%;
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
 }
 
 /* 拟合线管理样式 */
 .fit-lines-management {
-  margin-top: 16px;
-  padding: 16px;
+  margin-top: 20px;
+  padding: 20px;
   background: rgba(46, 204, 113, 0.05);
-  border-radius: 8px;
-  border: 1px solid rgba(46, 204, 113, 0.1);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-secondary);
 }
 
 .fit-lines-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .section-title {
-  color: rgba(46, 204, 113, 0.9);
-  font-size: 16px;
+  color: var(--text-accent);
+  font-size: 18px;
   font-weight: 600;
   margin: 0;
 }
 
 .add-line-btn {
-  padding: 8px 16px;
-  background: linear-gradient(135deg, rgba(46, 204, 113, 0.8), rgba(39, 174, 96, 0.8));
+  padding: 10px 20px;
+  background: linear-gradient(135deg, var(--primary-green), var(--primary-green-dark));
   color: white;
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius-md);
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: var(--transition-normal);
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: var(--transition-normal);
+  }
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(46, 204, 113, 0.3);
+  }
+
+  &:hover::before {
+    left: 100%;
+  }
 }
 
-.add-line-btn:hover {
-  background: linear-gradient(135deg, rgba(46, 204, 113, 1), rgba(39, 174, 96, 1));
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
+/* 全局表单样式 */
+.form-input,
+.form-select {
+  background: var(--glass-bg);
+  border: 1px solid var(--border-secondary);
+  color: var(--text-primary);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  font-size: 14px;
+  transition: var(--transition-normal);
+  option {
+    background-color: var(--glass-bg);
+  }
+  &:focus {
+    outline: none;
+    border-color: var(--primary-green);
+    box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.1);
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  &:hover {
+    border-color: var(--border-primary);
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  &::placeholder {
+    color: var(--text-muted);
+  }
+}
+
+.form-select {
+  cursor: pointer;
+  margin: 0.5rem;
+  background-position: right 12px center;
+  background-repeat: no-repeat;
+  background-size: 16px;
+  padding-right: 40px;
 }
 
 .fit-lines-tabs {
@@ -662,12 +757,29 @@ const calculateFitLine = async (line: FitLine) => {
 .config-section .form-input,
 .config-section .form-select {
   flex: 1;
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(46, 204, 113, 0.3);
-  color: #b0b0b0;
-  border-radius: 4px;
-  padding: 6px 10px;
+  background: var(--glass-bg);
+  border: 1px solid var(--border-secondary);
+  color: var(--text-primary);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
   font-size: 14px;
+  transition: var(--transition-normal);
+
+  &:focus {
+    outline: none;
+    border-color: var(--primary-green);
+    box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.1);
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  &:hover {
+    border-color: var(--border-primary);
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  &::placeholder {
+    color: var(--text-muted);
+  }
 }
 
 .color-picker {
@@ -722,6 +834,7 @@ const calculateFitLine = async (line: FitLine) => {
 
 /* 拟合线统计样式 */
 .fit-lines-statistics {
+  margin: 1rem;
   margin-top: 16px;
   padding: 16px;
   background: rgba(46, 204, 113, 0.05);
@@ -742,12 +855,25 @@ const calculateFitLine = async (line: FitLine) => {
 
 .fit-line-selector .form-select {
   width: 100%;
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(46, 204, 113, 0.3);
-  color: #b0b0b0;
-  border-radius: 4px;
-  padding: 8px 12px;
+  background: var(--glass-bg);
+  border: 1px solid var(--border-secondary);
+  color: var(--text-primary);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
   font-size: 14px;
+  transition: var(--transition-normal);
+
+  &:focus {
+    outline: none;
+    border-color: var(--primary-green);
+    box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.1);
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  &:hover {
+    border-color: var(--border-primary);
+    background: rgba(255, 255, 255, 0.05);
+  }
 }
 
 .statistics-content h4 {
@@ -775,17 +901,23 @@ const calculateFitLine = async (line: FitLine) => {
 /* ===== 右侧结果 ===== */
 .result-box {
   overflow-x: auto;
-  background: rgba(10, 15, 12, 0.92);
-  backdrop-filter: blur(12px);
-  border-radius: 15px;
-  border: 1px solid rgba(46, 204, 113, 0.3);
-  box-shadow: $shadow;
-  padding: 20px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--blur-strength));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-primary);
+  padding: 24px;
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  color: #b0b0b0;
+  gap: 20px;
+  color: var(--text-primary);
+  transition: var(--transition-normal);
+
+  &:hover {
+    border-color: var(--border-primary);
+    box-shadow: var(--shadow-primary), var(--shadow-glow);
+  }
 }
 
 .chart-result {
@@ -842,7 +974,7 @@ const calculateFitLine = async (line: FitLine) => {
   .submit-btn-container {
     position: sticky;
     bottom: 0;
-    background: rgba(10, 15, 12, 0.95);
+    background: var(--glass-bg);
     padding: 12px;
     z-index: 10;
     max-width: 140px;
@@ -853,6 +985,41 @@ const calculateFitLine = async (line: FitLine) => {
   .submit-btn {
     width: 100%;
     text-align: center;
+    padding: 14px 28px;
+    background: linear-gradient(135deg, var(--primary-green), var(--primary-green-dark));
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition-normal);
+    position: relative;
+    overflow: hidden;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: var(--transition-normal);
+    }
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(46, 204, 113, 0.3);
+    }
+
+    &:hover::before {
+      left: 100%;
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
   }
 
   /* 拟合线管理样式 */

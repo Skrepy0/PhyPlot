@@ -1,36 +1,52 @@
-$btn-bg: rgb(65, 153, 114);
-$btn-bg-hover: rgba(65, 153, 114, 0.5);
-$btn-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+$btn-bg: var(--primary-green);
+$btn-bg-hover: var(--primary-green-light);
+$btn-shadow: var(--shadow-primary);
 
 .sidebar-btn {
   margin: 15px;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 45px;
-  height: 45px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
-  border: none;
-  background-color: $btn-bg;
-  color: white;
+  border: 2px solid var(--border-secondary);
+  background: var(--glass-bg);
+  color: var(--text-primary);
   cursor: pointer;
 
   opacity: 1;
   transform: none;
 
-  transition:
-    background-color 0.3s ease,
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
+  transition: var(--transition-normal);
+  backdrop-filter: blur(var(--blur-strength));
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary-green), var(--accent-blue));
+    opacity: 0;
+    transition: var(--transition-normal);
+    z-index: -1;
+  }
 
   &:hover {
-    background-color: $btn-bg-hover;
-    box-shadow: $btn-shadow;
+    background: $btn-bg-hover;
+    border-color: transparent;
+    box-shadow: var(--shadow-glow);
+    transform: translateY(-3px);
+
+    &::before {
+      opacity: 0.3;
+    }
   }
 
   &:active {
-    transform: scale(0.9);
-    transition: transform 0.3s;
+    transform: scale(0.95) translateY(-3px);
+    transition: transform 0.1s;
   }
 
   svg,
@@ -38,5 +54,12 @@ $btn-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     width: 24px;
     height: 24px;
     display: block;
+    transition: transform var(--transition-normal);
+    z-index: 1;
+  }
+
+  &:hover svg,
+  &:hover img {
+    transform: scale(1.15);
   }
 }

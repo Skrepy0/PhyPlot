@@ -2,10 +2,14 @@
 import { reactive, onMounted } from 'vue'
 import ToggleSwitch from './ToggleSwitch.vue'
 import Checkbox from './Checkbox.vue'
+import { useTheme } from '~/composables/theme'
 
 const props = defineProps({
   show: Boolean,
 })
+
+// 主题系统
+const { currentTheme, effectiveTheme, toggleTheme, setTheme, getThemeIcon, getThemeName } = useTheme()
 
 const settings = reactive({
   chartDarkMode: false,
@@ -46,21 +50,31 @@ onMounted(() => {
 
       <div class="settings-group">
         <div class="setting-item">
-          <div class="setting-info" data-tooltip="开启后,添加x,y数据点并提交后,自动聚焦到x值的输入框,方便下次输入">
+          <div class="setting-info" tooltip="切换应用程序的整体主题样式">
+            <span class="setting-label">界面主题</span>
+            <span class="setting-desc">当前: {{ getThemeName(effectiveTheme) }}</span>
+          </div>
+          <ToggleSwitch
+            :modelValue="effectiveTheme === 'dark'"
+            @update:modelValue="(val) => setTheme(val ? 'dark' : 'light')"
+          />
+        </div>
+        <div class="setting-item">
+          <div class="setting-info" tooltip="开启后,添加x,y数据点并提交后,自动聚焦到x值的输入框,方便下次输入">
             <span class="setting-label">自动聚焦</span>
             <span class="setting-desc">自动聚焦到x值的输入框</span>
           </div>
           <ToggleSwitch v-model="settings.autoFocus" />
         </div>
         <div class="setting-item">
-          <div class="setting-info" data-tooltip="切换图表的亮色/暗色主题">
+          <div class="setting-info" tooltip="切换图表的亮色/暗色主题">
             <span class="setting-label">图表暗色模式</span>
             <span class="setting-desc">图表生成时使用暗色背景</span>
           </div>
           <ToggleSwitch v-model="settings.chartDarkMode" />
         </div>
         <div class="setting-item">
-          <div class="setting-info" data-tooltip="图表背景显示网格线，便于观察">
+          <div class="setting-info" tooltip="图表背景显示网格线，便于观察">
             <span class="setting-label">显示网格</span>
             <span class="setting-desc">图表中显示辅助网格线</span>
           </div>
@@ -72,20 +86,25 @@ onMounted(() => {
 </template>
 
 <style scoped lang="scss">
-@import '../../../assets/scss/components/card.scss';
-@import '../../../assets/scss/components/colors.scss';
+@import '../../../assets/scss/_modern-theme.scss';
 
 .settings-panel {
-  background: rgba(20, 26, 23, 0.6);
-  backdrop-filter: blur(12px);
-  border-radius: 24px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--blur-strength));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-primary);
   padding: 24px;
-  border: 1px solid rgba(46, 204, 113, 0.2);
-  box-shadow: $shadow;
   width: 100%;
   overflow-y: auto;
   margin: 0 auto;
   max-height: 80vh;
+  transition: var(--transition-normal);
+
+  &:hover {
+    border-color: var(--border-primary);
+    box-shadow: var(--shadow-primary), var(--shadow-glow);
+  }
 
   &::-webkit-scrollbar {
     width: 6px;
@@ -132,47 +151,19 @@ onMounted(() => {
   gap: 4px;
   cursor: help;
 
-  // 自定义 tooltip 样式
-  &::after {
-    content: attr(data-tooltip);
-    position: absolute;
-    bottom: 100%;
-    left: 0;
-    transform: translateY(-8px);
-    background: rgba(0, 0, 0, 0.8);
-    backdrop-filter: blur(8px);
-    color: white;
-    padding: 6px 12px;
-    border-radius: 12px;
-    font-size: 12px;
-    white-space: nowrap;
-    z-index: 10;
-    pointer-events: none;
-    opacity: 0;
-    transition:
-      opacity 0.2s ease,
-      transform 0.2s ease;
-    font-weight: 400;
-    border: 1px solid rgba(46, 204, 113, 0.4);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  }
-
-  &:hover::after {
-    opacity: 1;
-    transform: translateY(-12px);
-  }
 }
 
 .setting-label {
   font-size: 1rem;
   font-weight: 500;
-  color: $text-primary;
+  color: var(--text-primary);
 }
 
 .setting-desc {
   font-size: 0.8rem;
-  color: $text-secondary;
+  color: var(--text-secondary);
 }
+
 
 .submit-btn-container {
   display: flex;

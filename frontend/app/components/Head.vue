@@ -20,22 +20,25 @@ onMounted(() => {
 </template>
 
 <style scoped lang="scss">
+@import '../../assets/scss/_modern-theme.scss';
+
 .app-header {
   left: 0;
   position: fixed;
   width: 100%;
   top: 0;
   z-index: 100;
-  background: linear-gradient(135deg, #1a2a3a 0%, #0f1a24 100%);
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(8px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  background: var(--glass-bg);
+  box-shadow: var(--shadow-primary);
+  backdrop-filter: blur(var(--blur-strength));
+  border-bottom: 1px solid var(--glass-border);
+  transition: var(--transition-normal);
 }
 
 .header-container {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 0.75rem 2rem;
+  padding: 1rem 2rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -53,24 +56,24 @@ onMounted(() => {
 .title {
   font-size: 1.75rem;
   font-weight: 600;
-  background: linear-gradient(135deg, #e0f2fe 0%, #a5f3c3 100%);
+  background: linear-gradient(135deg, var(--primary-green), var(--accent-blue));
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
   letter-spacing: -0.5px;
   margin: 0;
   line-height: 1.2;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .subtitle {
   font-size: 0.85rem;
-  color: #94a3b8;
+  color: var(--text-secondary);
   font-weight: 400;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--glass-bg);
   padding: 0.2rem 0.6rem;
   border-radius: 20px;
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(var(--blur-strength));
+  border: 1px solid var(--glass-border);
 }
 
 .nav-links {
@@ -80,8 +83,8 @@ onMounted(() => {
 }
 
 .nav-btn {
-  background: rgba(255, 255, 255, 0.1);
-  border: none;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
   border-radius: 32px;
   width: 36px;
   height: 36px;
@@ -90,14 +93,15 @@ onMounted(() => {
   justify-content: center;
   font-size: 1.2rem;
   cursor: pointer;
-  color: #e2e8f0;
-  transition: all 0.2s ease;
-  backdrop-filter: blur(4px);
+  color: var(--text-primary);
+  transition: var(--transition-normal);
+  backdrop-filter: blur(var(--blur-strength));
 
   &:hover {
-    background: rgba(65, 153, 114, 0.6);
+    background: var(--primary-green-light);
+    border-color: var(--primary-green);
     transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--shadow-glow);
   }
 
   &:active {

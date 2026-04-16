@@ -10,7 +10,6 @@ from flask import jsonify
 
 @app.route('/api/chart', methods=['POST'])
 def get_chart():
-    app.logger.debug("1145141919810")
     response = request.get_json()
     app.logger.debug(response)
     data = response["data"]

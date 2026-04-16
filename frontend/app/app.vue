@@ -7,9 +7,16 @@ import Toast from '~/components/data-components/Toast.vue'
 import UnivariateStatistics from '~/components/univariate-statistics/UnivariateStatistics.vue'
 import Dialog from '~/components/data-components/Dialog.vue'
 import DrawChartPage from '~/components/chart/DrawChartPage.vue'
+import ThemeSwitcher from '~/components/ThemeSwitcher.vue'
+import { useTheme } from '~/composables/theme'
+
 const dialogRef = ref()
 const toastRef = ref<InstanceType<typeof Toast> | null>(null)
 const pageStatus = ref<InstanceType<typeof SideBar> | null>(null)
+
+// 主题系统
+const { effectiveTheme } = useTheme()
+
 const toastAdd = (message: string, options?: any) => {
   if (toastRef.value?.add) {
     toastRef.value.add(message, options)
@@ -28,6 +35,7 @@ const showDialog = (options: {
 }) => {
   return dialogRef.value.show(options)
 }
+
 true
 provide('dialog', showDialog)
 provide('toast', toastAdd)
@@ -35,6 +43,7 @@ provide('toast', toastAdd)
 <template>
   <BackGround />
   <Head />
+  <ThemeSwitcher />
   <div class="context">
     <SideBar ref="pageStatus" />
     <Settings :show="pageStatus?.showSettings"></Settings>
@@ -46,6 +55,11 @@ provide('toast', toastAdd)
   <Foot />
 </template>
 
+<style lang="scss">
+@import '../assets/scss/_modern-theme.scss';
+@import '../assets/scss/components/tooltip.scss';
+</style>
+
 <style scoped lang="scss">
 .context {
   display: flex;
@@ -55,9 +69,9 @@ provide('toast', toastAdd)
   :deep(.sidebar) {
     width: 260px;
     flex-shrink: 0;
-    background-color: rgba(30, 30, 35, 0.8);
-    backdrop-filter: blur(10px);
-    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--blur-strength));
+    border-right: 1px solid var(--glass-border);
   }
 }
 </style>

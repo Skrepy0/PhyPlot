@@ -16,7 +16,7 @@ const updateValue = (e: Event) => {
 </script>
 
 <style scoped lang="scss">
-@import '../../../assets/scss/components/colors.scss';
+@import '../../../assets/scss/_modern-theme.scss';
 
 .toggle-switch {
   position: relative;
@@ -36,11 +36,11 @@ const updateValue = (e: Event) => {
     cursor: pointer;
     position: absolute;
     inset: 0;
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--glass-bg);
     border-radius: 34px;
-    transition: 0.3s;
-    border: 1px solid rgba(46, 204, 113, 0.3);
-    backdrop-filter: blur(4px);
+    transition: var(--transition-normal);
+    border: 1px solid var(--border-secondary);
+    backdrop-filter: blur(var(--blur-strength));
 
     &::before {
       content: '';
@@ -49,25 +49,26 @@ const updateValue = (e: Event) => {
       width: 22px;
       left: 3px;
       bottom: 2px;
-      background: #ffffff;
+      background: var(--text-primary);
       border-radius: 50%;
-      transition: 0.20s;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      transition: var(--transition-normal);
+      box-shadow: var(--shadow-primary);
     }
   }
 
   &.checked .slider {
-    background: rgba(46, 204, 113, 0.2);
-    border-color: $accent-green;
+    background: var(--primary-green-light);
+    border-color: var(--primary-green);
 
     &::before {
       transform: translateX(22px);
-      background: $accent-green;
+      background: var(--primary-green);
     }
   }
 
   &:hover .slider {
-    background: rgba(46, 204, 113, 0.1);
+    border-color: var(--border-primary);
+    box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.1);
   }
 }
 </style>

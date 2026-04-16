@@ -312,22 +312,22 @@ defineExpose({ addRow, deleteRow, resetData })
 </template>
 
 <style scoped lang="scss">
-$bg-surface: #141a17;
-$border-green: #2ecc71;
-$text-primary: #e0e0e0;
-$text-secondary: #b0b0b0;
-$accent-green: #27ae60;
-$input-bg: #1e2522;
-$shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+@import '../../../assets/scss/_modern-theme.scss';
 
 .data-table-container {
-  background: rgba(10, 15, 12, 0.85);
-  backdrop-filter: blur(8px);
-  border-radius: 20px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--blur-strength));
+  border-radius: var(--radius-lg);
   padding: 20px;
-  border: 1px solid rgba(46, 204, 113, 0.3);
-  box-shadow: $shadow;
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-primary);
+  transition: var(--transition-normal);
   animation: slideInUp 0.5s ease-out;
+
+  &:hover {
+    border-color: var(--border-primary);
+    box-shadow: var(--shadow-primary), var(--shadow-glow);
+  }
 }
 
 @keyframes slideInUp {
@@ -347,7 +347,7 @@ $shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   margin-bottom: 24px;
   max-height: 200px;
   border-radius: 12px;
-  background: rgba(20, 25, 22, 0.5);
+  background: var(--bg-card);
   padding: 4px;
 
   /* 自定义滚动条 */
@@ -375,7 +375,7 @@ $shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 .data-table {
   width: 100%;
   border-collapse: collapse;
-  color: $text-primary;
+  color: var(--text-primary);
   font-size: 0.9rem;
 
   th,
@@ -386,8 +386,9 @@ $shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   }
 
   th {
-    background: rgba(30, 37, 34, 0.8);
-    color: $accent-green;
+    background: var(--bg-primary);
+    border-radius: 2px;
+    color: var(--primary-green);
     font-weight: 600;
     text-align: left;
     position: sticky;
@@ -424,17 +425,17 @@ $shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .edit-input {
-  background: $input-bg;
+  background: var(--glass-bg);
   border: 2px solid rgba(46, 204, 113, 0.3);
   border-radius: 8px;
   padding: 6px 10px;
-  color: $text-primary;
+  color: var(--text-primary);
   font-size: 0.9rem;
   transition: all 0.2s ease;
   outline: none;
 
   &:focus {
-    border-color: $accent-green;
+    border-color: var(--primary-green);
     box-shadow: 0 0 8px rgba(46, 204, 113, 0.3);
   }
 
@@ -465,7 +466,7 @@ $shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   cursor: pointer;
   font-size: 0.8rem;
   background: transparent;
-  color: $text-secondary;
+  color: var(--text-secondary);
   transition: all 0.2s ease;
   white-space: nowrap;
 
@@ -484,8 +485,8 @@ $shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 
     &:hover {
       background: rgba(46, 204, 113, 0.1);
-      border-color: $accent-green;
-      color: $accent-green;
+      border-color: var(--primary-green);
+      color: var(--primary-green);
     }
   }
 
@@ -501,8 +502,8 @@ $shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   }
 
   &.save-btn {
-    background: $accent-green;
-    border-color: $accent-green;
+    background: var(--primary-green);
+    border-color: var(--primary-green);
     color: white;
     font-weight: 600;
 
@@ -526,7 +527,7 @@ $shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 
 .empty-placeholder {
   text-align: center;
-  color: $text-secondary;
+  color: var(--text-secondary);
   padding: 40px 20px;
   font-style: italic;
 }
@@ -539,7 +540,7 @@ $shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 
 .form-title {
   font-size: 1rem;
-  color: $accent-green;
+  color: var(--primary-green);
   margin-bottom: 12px;
   font-weight: 600;
   letter-spacing: 0.5px;
@@ -553,11 +554,11 @@ $shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .form-input {
-  background: $input-bg;
+  background: var(--glass-bg);
   border: 2px solid rgba(46, 204, 113, 0.3);
   border-radius: 8px;
   padding: 10px 12px;
-  color: $text-primary;
+  color: var(--text-primary);
   flex: 1;
   min-width: 100px;
   font-size: 0.9rem;
@@ -565,14 +566,14 @@ $shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   outline: none;
 
   &::placeholder {
-    color: $text-secondary;
+    color: var(--text-secondary);
     opacity: 0.7;
   }
 
   &:focus {
-    border-color: $accent-green;
+    border-color: var(--primary-green);
     box-shadow: 0 0 8px rgba(46, 204, 113, 0.3);
-    background: rgba(30, 37, 34, 0.8);
+    background: var(--bg-primary);
   }
 
   &:hover {
@@ -581,7 +582,7 @@ $shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .add-btn {
-  background: $accent-green;
+  background: var(--primary-green);
   color: white;
   border: none;
   border-radius: 8px;
@@ -630,7 +631,7 @@ $shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 .download-btn {
   background: transparent;
   border: 1px solid rgba(46, 204, 113, 0.4);
-  color: $accent-green;
+  color: var(--primary-green);
   border-radius: 8px;
   padding: 10px 18px;
   cursor: pointer;
@@ -643,8 +644,8 @@ $shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 
   &:hover {
     background: rgba(46, 204, 113, 0.1);
-    border-color: $accent-green;
-    color: $accent-green;
+    border-color: var(--primary-green);
+    color: var(--primary-green);
   }
 
   &:active {

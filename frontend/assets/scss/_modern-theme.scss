@@ -61,6 +61,122 @@
   --glass-bg: rgba(21, 26, 36, 0.8);
 }
 
+// 明亮主题
+[data-theme="light"] {
+  // 主色调 - 科技绿（稍作调整以适应浅色背景）
+  --primary-green: #27ae60;
+  --primary-green-dark: #219a52;
+  --primary-green-light: #27ae60dd;
+
+  // 辅助色 - 蓝色
+  --accent-blue: #2980b9;
+  --accent-blue-dark: #1f618d;
+
+  // 状态色（保持不变）
+  --warning-orange: #f39c12;
+  --error-red: #e74c3c;
+  --success-green: #27ae60;
+
+  // 背景色 - 明亮主题
+  --bg-primary: #f8fafc;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f1f5f9;
+  --bg-card: rgba(255, 255, 255, 0.9);
+  --bg-overlay: rgba(248, 250, 252, 0.95);
+
+  // 文字颜色 - 明亮主题
+  --text-primary: #1e293b;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --text-accent: #27ae60;
+
+  // 边框和阴影 - 明亮主题
+  --border-primary: rgba(39, 174, 96, 0.4);
+  --border-secondary: rgba(39, 174, 96, 0.2);
+  --shadow-primary: 0 4px 20px rgba(0, 0, 0, 0.1);
+  --shadow-glow: 0 0 20px rgba(39, 174, 96, 0.2);
+
+  // 毛玻璃效果 - 明亮主题
+  --blur-strength: 8px;
+  --glass-bg: rgba(255, 255, 255, 0.8);
+  --glass-border: rgba(39, 174, 96, 0.2);
+
+  // 动态背景效果调整
+  body {
+    background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 50%, var(--bg-tertiary) 100%);
+
+    &::before {
+      background:
+        radial-gradient(circle at 20% 80%, rgba(39, 174, 96, 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(41, 128, 185, 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 40% 40%, rgba(39, 174, 96, 0.04) 0%, transparent 50%);
+    }
+  }
+
+  // 表单元素调整
+  .form-group {
+    input, select {
+      background: rgba(39, 174, 96, 0.05);
+      border-color: var(--border-secondary);
+      color: var(--text-primary);
+
+      &:focus {
+        background: rgba(39, 174, 96, 0.08);
+        border-color: var(--primary-green);
+        box-shadow: 0 0 0 3px rgba(39, 174, 96, 0.1);
+      }
+
+      &:hover {
+        background: rgba(39, 174, 96, 0.07);
+        border-color: var(--border-primary);
+      }
+
+      &::placeholder {
+        color: var(--text-muted);
+      }
+    }
+
+    select {
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2364748b' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+    }
+  }
+
+  // 按钮样式调整
+  .btn--secondary {
+    background: rgba(39, 174, 96, 0.1);
+    color: var(--text-primary);
+    border-color: var(--border-secondary);
+
+    &:hover {
+      background: rgba(39, 174, 96, 0.15);
+      border-color: var(--border-primary);
+    }
+  }
+
+  // 侧边栏调整
+  .config-sidebar {
+    @media (max-width: 768px) {
+      background: var(--bg-overlay);
+    }
+  }
+
+  // 表格样式调整
+  data-table {
+    .table-container {
+      table {
+        th {
+          background: rgba(39, 174, 96, 0.05);
+          color: var(--text-secondary);
+        }
+
+        tr:hover {
+          background: rgba(39, 174, 96, 0.03);
+        }
+      }
+    }
+  }
+}
+
 // 基础重置和全局样式
 * {
   margin: 0;

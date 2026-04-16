@@ -166,7 +166,8 @@ const copyValue = async (val: string | number): Promise<void> => {
 
 <style scoped lang="scss">
 @use '../../../assets/scss/components/card';
-@import '../../../assets/scss/components/colors';
+@use '../../../assets/scss/components/colors';
+@import '../../../assets/scss/_modern-theme.scss';
 
 .us-container {
   width: 100%;
@@ -185,17 +186,17 @@ const copyValue = async (val: string | number): Promise<void> => {
 .result-card {
   display: flex;
   flex-direction: column;
-  height: 700px;
-  background: rgba(10, 15, 12, 0.92);
+  height: 850px;
+  background: var(--glass-bg);
   backdrop-filter: blur(12px);
   border-radius: 24px;
   border: 1px solid rgba(46, 204, 113, 0.3);
-  box-shadow: $shadow;
+  box-shadow: var(--shadow-primary);
   padding: 24px;
-  color: $text-primary;
+  color: var(--text-primary);
 
   &:hover {
-    border-color: $border-green;
+    border-color: var(--border-primary);
     transform: translateY(-4px);
     transition: all 0.6s ease;
   }
@@ -213,11 +214,17 @@ const copyValue = async (val: string | number): Promise<void> => {
   display: flex;
   flex-direction: column;
 
-  background: rgba(30, 37, 34, 0.6);
-  border-radius: 14px;
-  padding: 12px;
+  background: var(--glass-bg);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  border: 1px solid var(--glass-border);
 
   overflow: hidden;
+  transition: var(--transition-normal);
+
+  &:hover {
+    border-color: var(--border-primary);
+  }
 }
 
 .table-container :deep(.data-table-container) {
@@ -245,6 +252,60 @@ const copyValue = async (val: string | number): Promise<void> => {
 .slide-fade-leave-to {
   transform: translateX(-100%);
   opacity: 0;
+}
+
+/* Form styling */
+.form-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.form-label {
+  min-width: 80px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.form-select,
+.form-input {
+  flex: 1;
+  background: var(--glass-bg);
+  border: 1px solid var(--border-secondary);
+  color: var(--text-primary);
+  option{
+    background-color: var(--glass-bg);
+  }
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  font-size: 14px;
+  transition: var(--transition-normal);
+
+  &:focus {
+    outline: none;
+    border-color: var(--primary-green);
+    box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.1);
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  &:hover {
+    border-color: var(--border-primary);
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  &::placeholder {
+    color: var(--text-muted);
+  }
+}
+
+.form-select {
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 12px center;
+  background-repeat: no-repeat;
+  background-size: 16px;
+  padding-right: 40px;
 }
 
 @media (max-width: 800px) {
@@ -275,6 +336,50 @@ const copyValue = async (val: string | number): Promise<void> => {
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
+  }
+}
+
+.submit-btn-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.submit-btn {
+  padding: 14px 28px;
+  background: linear-gradient(135deg, var(--primary-green), var(--primary-green-dark));
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-normal);
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: var(--transition-normal);
+  }
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(46, 204, 113, 0.3);
+  }
+
+  &:hover::before {
+    left: 100%;
+  }
+
+  &:active {
+    transform: translateY(0);
   }
 }
 </style>

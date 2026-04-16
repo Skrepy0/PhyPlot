@@ -167,11 +167,11 @@ defineExpose({ loadChart, refreshChart })
       </div>
 
       <div class="chart-footer">
-        <button v-if="imageSrc && !loading" class="action-btn download-btn" @click="downloadChart" title="下载图表" aria-label="下载图表">
+        <button v-if="imageSrc && !loading" class="action-btn action-btn--download" @click="downloadChart" title="下载图表" aria-label="下载图表">
           <span class="btn-icon">⬇</span>
           <span class="btn-text">下载</span>
         </button>
-        <button class="action-btn reload-btn" @click="refreshChart" :disabled="loading" title="重新加载" aria-label="重新加载图表">
+        <button class="action-btn action-btn--refresh" @click="refreshChart" :disabled="loading" title="重新加载" aria-label="重新加载图表">
           <span class="btn-icon">🔄</span>
           <span class="btn-text">{{ loading ? '加载中...' : '刷新' }}</span>
         </button>
@@ -181,8 +181,7 @@ defineExpose({ loadChart, refreshChart })
 </template>
 
 <style scoped lang="scss">
-@import '../../../assets/scss/components/colors';
-@import '../../../assets/scss/components/card';
+@import '../../../assets/scss/_modern-theme.scss';
 
 .chart-container {
   width: 100%;
@@ -193,19 +192,37 @@ defineExpose({ loadChart, refreshChart })
 
 .chart-wrapper {
   width: 100%;
-  background: rgba(10, 15, 12, 0.92);
-  backdrop-filter: blur(12px);
-  border-radius: 15px;
-  border: 1px solid rgba(46, 204, 113, 0.3);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--blur-strength));
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-primary);
   display: flex;
   flex-direction: column;
-  transition: all 0.3s ease;
+  transition: var(--transition-normal);
   overflow: hidden;
 
   &:hover {
-    border-color: rgba(46, 204, 113, 0.6);
-    box-shadow: 0 12px 48px rgba(46, 204, 113, 0.15);
+    border-color: var(--border-primary);
+    box-shadow: var(--shadow-primary), var(--shadow-glow);
+    transform: translateY(-2px);
+  }
+
+  &--glow {
+    position: relative;
+
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      padding: 2px;
+      background: linear-gradient(135deg, var(--primary-green), var(--accent-blue), var(--primary-green));
+      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      mask-composite: xor;
+      pointer-events: none;
+      animation: border-flow 4s linear infinite;
+    }
   }
 }
 
@@ -213,8 +230,8 @@ defineExpose({ loadChart, refreshChart })
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 20px;
-  border-bottom: 1px solid rgba(46, 204, 113, 0.1);
+  padding: 20px;
+  border-bottom: 1px solid var(--glass-border);
   background: linear-gradient(135deg, rgba(46, 204, 113, 0.05), rgba(39, 174, 96, 0.02));
 }
 
@@ -222,9 +239,9 @@ defineExpose({ loadChart, refreshChart })
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-  padding: 10px 30px;
-  border-top: 1px solid rgba(46, 204, 113, 0.1);
-  background: rgba(0, 0, 0, 0.2);
+  padding: 16px 20px;
+  border-top: 1px solid var(--glass-border);
+  background: rgba(0, 0, 0, 0.1);
 }
 
 .chart-actions {
@@ -234,23 +251,41 @@ defineExpose({ loadChart, refreshChart })
 }
 
 .action-btn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  background: linear-gradient(135deg, rgba(46, 204, 113, 0.15), rgba(39, 174, 96, 0.1));
-  color: rgba(46, 204, 113, 0.9);
-  border: 1px solid rgba(46, 204, 113, 0.3);
-  border-radius: 8px;
+  gap: 8px;
+  padding: 10px 20px;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+  border: 1px solid var(--border-secondary);
+  border-radius: var(--radius-md);
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: var(--transition-fast);
+  text-decoration: none;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: var(--transition-normal);
+  }
+
+  &:hover::before {
+    left: 100%;
+  }
 
   &:hover:not(:disabled) {
-    background: linear-gradient(135deg, rgba(46, 204, 113, 0.3), rgba(39, 174, 96, 0.2));
-    border-color: rgba(46, 204, 113, 0.6);
-    color: rgba(46, 204, 113, 1);
+    background: var(--primary-green-light);
+    border-color: var(--primary-green);
+    color: white;
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(46, 204, 113, 0.2);
   }
@@ -263,27 +298,43 @@ defineExpose({ loadChart, refreshChart })
     opacity: 0.6;
     cursor: not-allowed;
   }
-}
 
-.download-btn {
-  &:hover {
-    background: linear-gradient(135deg, rgba(46, 204, 113, 0.4), rgba(39, 174, 96, 0.3));
-    box-shadow: 0 6px 16px rgba(46, 204, 113, 0.3);
+  &--download {
+    background: linear-gradient(135deg, var(--primary-green), var(--primary-green-dark));
+    color: white;
+    border-color: var(--primary-green);
+
+    &:hover {
+      background: linear-gradient(135deg, var(--primary-green-dark), var(--primary-green));
+      box-shadow: 0 6px 16px rgba(46, 204, 113, 0.3);
+    }
   }
-}
 
-.reload-btn {
-  &:hover:not(:disabled) {
-    background: linear-gradient(135deg, rgba(100, 200, 150, 0.3), rgba(80, 180, 130, 0.2));
+  &--refresh {
+    background: rgba(52, 152, 219, 0.1);
+    border-color: rgba(52, 152, 219, 0.3);
+    color: var(--accent-blue);
+
+    &:hover:not(:disabled) {
+      background: rgba(52, 152, 219, 0.2);
+      border-color: var(--accent-blue);
+      color: var(--accent-blue);
+    }
   }
 }
 
 .btn-icon {
   font-size: 16px;
+  transition: transform var(--transition-normal);
+
+  .action-btn:hover & {
+    transform: scale(1.1);
+  }
 }
 
 .btn-text {
   white-space: nowrap;
+  font-weight: 600;
 }
 
 .chart-content {
@@ -291,24 +342,25 @@ defineExpose({ loadChart, refreshChart })
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 30px;
-  height: 100%;
+  padding: 30px;
+  min-height: 400px;
   position: relative;
 }
 
 .chart-img {
   max-width: 100%;
-  max-height: 258px;
-  border-radius: 12px;
-  border: 1px solid rgba(46, 204, 113, 0.2);
-  box-shadow: 0 4px 16px rgba(46, 204, 113, 0.1);
-  transition: all 0.3s ease;
+  max-height: 400px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-primary);
+  transition: var(--transition-normal);
   object-fit: contain;
 
   &:hover {
-    border-color: rgba(46, 204, 113, 0.5);
-    box-shadow: 0 8px 24px rgba(46, 204, 113, 0.2);
+    border-color: var(--border-primary);
+    box-shadow: var(--shadow-primary), var(--shadow-glow);
     filter: brightness(1.05);
+    transform: scale(1.01);
   }
 }
 
@@ -317,11 +369,11 @@ defineExpose({ loadChart, refreshChart })
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 20px;
+  gap: 24px;
   width: 100%;
 
   p {
-    color: rgba(46, 204, 113, 0.8);
+    color: var(--text-secondary);
     font-size: 16px;
     margin: 0;
     font-weight: 500;
@@ -329,10 +381,10 @@ defineExpose({ loadChart, refreshChart })
 }
 
 .spinner {
-  width: 50px;
-  height: 50px;
-  border: 4px solid rgba(46, 204, 113, 0.2);
-  border-top-color: rgba(46, 204, 113, 0.8);
+  width: 60px;
+  height: 60px;
+  border: 4px solid var(--border-secondary);
+  border-top-color: var(--primary-green);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -348,23 +400,23 @@ defineExpose({ loadChart, refreshChart })
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 15px;
-  padding: 30px;
-  background: rgba(220, 53, 69, 0.1);
-  border: 1px solid rgba(220, 53, 69, 0.3);
-  border-radius: 12px;
-  backdrop-filter: blur(10px);
+  gap: 20px;
+  padding: 40px;
+  background: rgba(231, 76, 60, 0.1);
+  border: 1px solid rgba(231, 76, 60, 0.3);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(var(--blur-strength));
+  text-align: center;
 }
 
 .error-icon {
   font-size: 48px;
-  color: #dc3545;
+  color: var(--error-red);
   animation: pulse 2s ease-in-out infinite;
 }
 
 @keyframes pulse {
-  0%,
-  100% {
+  0%, 100% {
     opacity: 1;
     transform: scale(1);
   }
@@ -375,28 +427,44 @@ defineExpose({ loadChart, refreshChart })
 }
 
 .error-text {
-  color: #dc3545;
+  color: var(--error-red);
   font-size: 16px;
   margin: 0;
-  text-align: center;
   font-weight: 500;
+  line-height: 1.5;
 }
 
 .retry-btn {
-  padding: 10px 24px;
-  background: linear-gradient(135deg, rgba(46, 204, 113, 0.8), rgba(39, 174, 96, 0.8));
+  padding: 12px 24px;
+  background: linear-gradient(135deg, var(--primary-green), var(--primary-green-dark));
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: var(--transition-normal);
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: var(--transition-normal);
+  }
 
   &:hover {
-    background: linear-gradient(135deg, rgba(46, 204, 113, 1), rgba(39, 174, 96, 1));
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(46, 204, 113, 0.4);
+    box-shadow: 0 6px 20px rgba(46, 204, 113, 0.3);
+  }
+
+  &:hover::before {
+    left: 100%;
   }
 
   &:active {
@@ -414,16 +482,18 @@ defineExpose({ loadChart, refreshChart })
   opacity: 0;
 }
 
+// 响应式设计
 @media (max-width: 768px) {
   .chart-header {
     flex-direction: column;
     gap: 12px;
-    padding: 16px 20px;
+    padding: 16px;
   }
 
   .chart-footer {
-    padding: 12px 20px;
+    padding: 12px 16px;
     justify-content: center;
+    flex-wrap: wrap;
   }
 
   .chart-content {
@@ -431,12 +501,55 @@ defineExpose({ loadChart, refreshChart })
     min-height: 300px;
   }
 
+  .chart-img {
+    max-height: 300px;
+  }
+
   .action-btn {
-    padding: 8px 12px;
+    padding: 8px 16px;
     font-size: 12px;
+
+    .btn-text {
+      display: none;
+    }
   }
 
   .btn-icon {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .chart-wrapper {
+    border-radius: var(--radius-md);
+  }
+
+  .chart-content {
+    padding: 16px;
+    min-height: 250px;
+  }
+
+  .chart-img {
+    max-height: 250px;
+  }
+
+  .action-btn {
+    padding: 6px 12px;
+  }
+
+  .btn-icon {
+    font-size: 14px;
+  }
+
+  .error-box {
+    padding: 24px;
+  }
+
+  .error-icon {
+    font-size: 36px;
+  }
+
+  .error-text {
     font-size: 14px;
   }
 }
