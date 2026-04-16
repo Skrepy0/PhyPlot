@@ -250,7 +250,7 @@ const loadData = async (event: Event) => {
           }
           newRows.push({
             id: typeof item.id === 'number' ? item.id : Date.now() + Math.random(),
-            value: String(item.value)
+            value: String(item.value),
           })
         } else {
           if (item.x === undefined || item.y === undefined) {
@@ -260,14 +260,14 @@ const loadData = async (event: Event) => {
           newRows.push({
             id: typeof item.id === 'number' ? item.id : Date.now() + Math.random(),
             x: String(item.x),
-            y: String(item.y)
+            y: String(item.y),
           })
         }
       }
 
       // 替换现有数据
       rows.value = newRows
-      nextId = getNextId()  // 重新计算下一个可用 ID
+      nextId = getNextId() // 重新计算下一个可用 ID
       toast?.(`成功导入 ${newRows.length} 条数据`, { type: 'success' })
 
       // 清空 file input 的值，以便再次导入同一个文件时能触发 change
