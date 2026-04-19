@@ -271,9 +271,9 @@ class Chart:
             spine.set_color(self.colors['text'])
 
         if ax.get_legend_handles_labels()[0]:
-            legend = ax.legend(loc='best', frameon=True, fancybox=True, shadow=True,
-                               fontsize=10, facecolor=self.colors['bg'],
-                               edgecolor=self.colors['text'])
+            legend = ax.legend(loc='upper left', frameon=True, fancybox=True, shadow=True,
+                       fontsize=10, facecolor=self.colors['bg'], framealpha=0.3,
+                       markerscale=0.6, edgecolor=self.colors['text'])
             for text in legend.get_texts():
                 text.set_color(self.colors['text'])
 

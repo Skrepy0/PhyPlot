@@ -294,7 +294,14 @@ const calculateFitLine = async (line: FitLine) => {
                 <div class="right-config">
                   <div class="form-row">
                     <label class="form-label">小数位数</label>
-                    <input type="number" v-model.number="configData.significantDigits" class="form-input" />
+                    <input
+                      type="number"
+                      v-model.number="configData.significantDigits"
+                      class="form-input"
+                      min="0"
+                      step="1"
+                      @input="configData.significantDigits = Math.max(0, configData.significantDigits || 0)"
+                    />
                   </div>
 
                   <div class="form-row">

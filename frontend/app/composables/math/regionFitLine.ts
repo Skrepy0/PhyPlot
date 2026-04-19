@@ -1,86 +1,85 @@
-import { Decimal } from 'decimal.js'
+import Decimal from 'decimal.js'
 
 interface Point {
   x: string
   y: string
 }
 
-/**
- * 自动识别伏安特性曲线尾部线性区域，并拟合直线 y = kx + m
- * @param points 原始数据点（无需排序，x 允许乱序）
- * @returns 斜率 k 和截距 m 的字符串表示
- */
 export const getRegionFitLine = (points: Point[]): { k: string; m: string } => {
-  // 1. 数据预处理：转为数字、过滤无效点、按 x 升序排序
   const data = points
     .map((p) => ({ x: parseFloat(p.x), y: parseFloat(p.y) }))
     .filter((p) => !isNaN(p.x) && !isNaN(p.y))
     .sort((a, b) => a.x - b.x)
 
-  if (data.length < 3) {
-    return fallbackFit(data)
-  }
+  if (data.length < 3) return fallbackFit(data)
 
-  // 2. 计算相邻点间的斜率（一阶差分）及中点 x
-  const slopes: number[] = []
-  const midX: number[] = []
-  for (let i = 0; i < data.length - 1; i++) {
-    const current = data[i]!
-    const next = data[i + 1]!
-    const dx = next.x - current.x
-    const dy = next.y - current.y
-    if (dx !== 0) {
-      slopes.push(dy / dx)
-      midX.push((current.x + next.x) / 2)
-    }
-  }
+  const best = findBestLinearRegion(data)
+  if (!best) return fallbackFit(data)
 
-  if (slopes.length < 2) {
-    return fallbackFit(data)
-  }
-
-  // 3. 滑动窗口参数
-  const windowSize = Math.min(5, Math.floor(slopes.length / 2))
-  const relStdThreshold = 0.1 // 相对标准差阈值 10%
-
-  let bestStartIdx = -1
-  let bestEndIdx = -1
-  let minRelStd = Infinity
-
-  // 从尾部向头部滑动窗口，寻找斜率最稳定的连续区间
-  for (let end = slopes.length - 1; end >= windowSize - 1; end--) {
-    const start = end - windowSize + 1
-    const windowSlopes = slopes.slice(start, end + 1)
-    const mean = windowSlopes.reduce((a, b) => a + b, 0) / windowSlopes.length
-    if (Math.abs(mean) < 1e-12) continue
-    const variance = windowSlopes.reduce((sum, s) => sum + (s - mean) ** 2, 0) / windowSlopes.length
-    const std = Math.sqrt(variance)
-    const relStd = std / Math.abs(mean)
-
-    if (relStd < minRelStd && relStd < relStdThreshold) {
-      minRelStd = relStd
-      bestStartIdx = start
-      bestEndIdx = end
-    }
-  }
-
-  // 4. 确定用于拟合的原始点索引范围
-  let fitPoints: { x: number; y: number }[]
-  if (bestStartIdx !== -1) {
-    const startOrigIdx = bestStartIdx
-    const endOrigIdx = bestEndIdx + 1
-    fitPoints = data.slice(startOrigIdx, endOrigIdx + 1)
-  } else {
-    fitPoints = data.slice(-Math.min(5, data.length))
-  }
-
-  // 5. 对选中的点进行最小二乘线性拟合
-  return leastSquaresFit(fitPoints)
+  return leastSquaresFit(data.slice(best.start, best.end + 1))
 }
 
-/**
- * 降级拟合：直接使用全部点进行线性拟合
- */
+interface RegionResult {
+  start: number
+  end: number
+  r: number
+}
+
+function findBestLinearRegion(data: { x: number; y: number }[]): RegionResult | null {
+  let best: RegionResult | null = null
+  const n = data.length
+
+  for (let i = 0; i < n - 2; i++) {
+    for (let j = i + 2; j < n; j++) {
+      const segment = data.slice(i, j + 1)
+      const r = calcCorrelation(segment)
+      if (isNaN(r)) continue
+
+      const absR = Math.abs(r)
+
+      if (!best) {
+        best = { start: i, end: j, r: absR }
+        continue
+      }
+
+      const bestLen = best.end - best.start + 1
+      const curLen = j - i + 1
+
+      if (absR > best.r + 1e-6) {
+        best = { start: i, end: j, r: absR }
+      } else if (Math.abs(absR - best.r) < 1e-6 && curLen > bestLen) {
+        best = { start: i, end: j, r: absR }
+      }
+    }
+  }
+
+  return best
+}
+
+function calcCorrelation(points: { x: number; y: number }[]): number {
+  const n = points.length
+  let sumX = 0
+  let sumY = 0
+  let sumXY = 0
+  let sumX2 = 0
+  let sumY2 = 0
+
+  for (const p of points) {
+    sumX += p.x
+    sumY += p.y
+    sumXY += p.x * p.y
+    sumX2 += p.x * p.x
+    sumY2 += p.y * p.y
+  }
+
+  const numerator = n * sumXY - sumX * sumY
+  const denominator = Math.sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY))
+
+  if (denominator === 0) return NaN
+
+  return numerator / denominator
+}
+
 function fallbackFit(data: { x: number; y: number }[]): { k: string; m: string } {
   if (data.length < 2) {
     throw new Error('至少需要两个有效数据点才能拟合直线')
@@ -88,9 +87,6 @@ function fallbackFit(data: { x: number; y: number }[]): { k: string; m: string }
   return leastSquaresFit(data)
 }
 
-/**
- * 最小二乘法拟合直线 y = kx + m (使用 Decimal 高精度计算)
- */
 function leastSquaresFit(points: { x: number; y: number }[]): { k: string; m: string } {
   const n = points.length
   let sumX = new Decimal(0)
@@ -112,11 +108,8 @@ function leastSquaresFit(points: { x: number; y: number }[]): { k: string; m: st
     throw new Error('无法拟合垂直线，x 值无变化')
   }
 
-  const kNum = sumXY.times(n).minus(sumX.times(sumY))
-  const k = kNum.div(denominator)
-
-  const mNum = sumY.minus(k.times(sumX))
-  const m = mNum.div(n)
+  const k = sumXY.times(n).minus(sumX.times(sumY)).div(denominator)
+  const m = sumY.minus(k.times(sumX)).div(n)
 
   return {
     k: k.toString(),
