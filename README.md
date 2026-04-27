@@ -1,6 +1,7 @@
 # PhyPlot
 
 ![License](https://img.shields.io/badge/license-MIT-aqua)
+
 PhyPlot 是一个简单的物理实验数据处理工具，为高中和大学物理学生提供基础的数据分析和图表绘制功能。帮助学生处理物理实验数据并进行简单的统计分析。
 
 ## ✨ 主要功能特性
