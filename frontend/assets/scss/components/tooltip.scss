@@ -14,7 +14,6 @@ $tooltip-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 [tooltip] {
   position: relative;
   cursor: help;
-  z-index: 1; // 👈 提升父级层级（关键）
 
   &::before {
     content: attr(tooltip);
@@ -25,7 +24,7 @@ $tooltip-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     padding: $tooltip-padding;
     border-radius: $tooltip-border-radius;
     white-space: nowrap;
-    z-index: 999999; // 👈 拉满
+    z-index: 10000; // 高于sidebar的1000
     box-shadow: $tooltip-shadow;
 
     opacity: 0;
@@ -47,7 +46,7 @@ $tooltip-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     position: absolute;
     border: $tooltip-arrow-size solid transparent;
 
-    z-index: 999999;
+    z-index: 10000;
 
     opacity: 0;
     visibility: hidden;
@@ -153,5 +152,17 @@ $tooltip-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
       border-right-color: $tooltip-bg;
       border-top-color: transparent;
     }
+  }
+}
+
+// ===== sidebar按钮和nav按钮特殊处理 =====
+.sidebar-btn[tooltip],
+.nav-btn[tooltip] {
+  &::before {
+    z-index: 2147483647; // 使用最高可能的z-index
+  }
+
+  &::after {
+    z-index: 2147483647;
   }
 }

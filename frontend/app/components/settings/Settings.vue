@@ -50,30 +50,32 @@ onMounted(() => {
 
       <div class="settings-group">
         <div class="setting-item">
-          <div class="setting-info" tooltip="切换应用程序的整体主题样式">
+          <div class="setting-info">
             <span class="setting-label">界面主题</span>
-            <span class="setting-desc">当前: {{ getThemeName(effectiveTheme) }}</span>
+            <span class="setting-desc"
+              >切换应用程序的整体主题样式。当前: {{ getThemeName(effectiveTheme) }}。深色主题适合夜间使用，浅色主题适合白天使用。</span
+            >
           </div>
           <ToggleSwitch :modelValue="effectiveTheme === 'dark'" @update:modelValue="(val) => setTheme(val ? 'dark' : 'light')" />
         </div>
         <div class="setting-item">
-          <div class="setting-info" tooltip="开启后,添加x,y数据点并提交后,自动聚焦到x值的输入框,方便下次输入">
+          <div class="setting-info">
             <span class="setting-label">自动聚焦</span>
-            <span class="setting-desc">自动聚焦到x值的输入框</span>
+            <span class="setting-desc">开启后，添加x,y数据点并提交后，自动聚焦到x值的输入框，方便下次输入。提升数据录入效率。</span>
           </div>
           <ToggleSwitch v-model="settings.autoFocus" />
         </div>
         <div class="setting-item">
-          <div class="setting-info" tooltip="切换图表的亮色/暗色主题">
+          <div class="setting-info">
             <span class="setting-label">图表暗色模式</span>
-            <span class="setting-desc">图表生成时使用暗色背景</span>
+            <span class="setting-desc">切换图表的亮色/暗色主题。开启后图表生成时使用暗色背景，适合在暗色主题下查看，视觉效果更佳。</span>
           </div>
           <ToggleSwitch v-model="settings.chartDarkMode" />
         </div>
         <div class="setting-item">
-          <div class="setting-info" tooltip="图表背景显示网格线，便于观察">
+          <div class="setting-info">
             <span class="setting-label">显示网格</span>
-            <span class="setting-desc">图表中显示辅助网格线</span>
+            <span class="setting-desc">图表背景显示网格线，便于观察数据点的位置和趋势。网格线作为视觉辅助，帮助更精确地读取图表数据。</span>
           </div>
           <ToggleSwitch v-model="settings.showGrid" />
         </div>
@@ -145,8 +147,8 @@ onMounted(() => {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  cursor: help;
+  gap: 6px;
+  flex: 1;
 }
 
 .setting-label {
@@ -156,8 +158,9 @@ onMounted(() => {
 }
 
 .setting-desc {
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   color: var(--text-secondary);
+  line-height: 1.4;
 }
 
 .submit-btn-container {

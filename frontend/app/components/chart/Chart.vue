@@ -238,6 +238,7 @@ defineExpose({ loadChart, refreshChart })
   flex-direction: column;
   transition: var(--transition-normal);
   overflow: hidden;
+  z-index: 1; // 确保chart-wrapper的层叠上下文低于tooltip
 
   &:hover {
     border-color: var(--border-primary);

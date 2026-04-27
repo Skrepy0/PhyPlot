@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
+const showHome = ref(true)
 const showSidebar = ref(false)
 const showUnivariateStatistics = ref(false)
 const showDrawChart = ref(false)
 const showSettings = ref(false)
-const Pages: Ref[] = [showDrawChart, showUnivariateStatistics, showSettings]
+const Pages: Ref[] = [showHome, showDrawChart, showUnivariateStatistics, showSettings]
 const showPage = (targetPage: Ref) => {
   Pages.forEach((page) => {
     if (page.value && page !== targetPage) {
@@ -23,6 +24,9 @@ const showDCP = () => {
 const showSs = () => {
   showPage(showSettings)
 }
+const showHomePage = () => {
+  showPage(showHome)
+}
 setTimeout(() => {
   showSidebar.value = true
 }, 500)
@@ -30,12 +34,21 @@ defineExpose({
   showUnivariateStatistics,
   showDrawChart,
   showSettings,
+  showHome,
 })
 </script>
 
 <template>
   <Transition name="slide-fade">
     <div class="sidebar-container" v-if="showSidebar">
+      <button class="home-btn sidebar-btn" tooltip="Home" data-position="right" @click="showHomePage">
+        <svg class="icon" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" width="25" height="25">
+          <path
+            d="M946.5 505L560.1 118.8l-25.9-25.9c-12.3-12.2-32.1-12.2-44.4 0L77.5 505c-12.3 12.3-18.9 28.6-18.8 46 0.4 35.2 29.7 63.3 64.9 63.3h42.5V940h691.8V614.3h43.4c17.1 0 33.2-6.7 45.3-18.8 12.1-12.1 18.7-28.2 18.7-45.3 0-17-6.7-33.1-18.8-45.2zM568 868H456V664h112v204z m217.9-325.7V868H632V640c0-22.1-17.9-40-40-40H432c-22.1 0-40 17.9-40 40v228H238.1V542.3h-96l370-369.7 23.1 23.1L882 542.3h-96.1z"
+            fill="currentColor"
+          ></path>
+        </svg>
+      </button>
       <button class="data-point-btn sidebar-btn" tooltip="单变量统计" data-position="right" @click="showUS">
         <svg class="icon" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" width="25" height="25">
           <path
@@ -76,13 +89,14 @@ defineExpose({
   margin: 1px;
   flex-direction: column;
   border-radius: var(--radius-lg);
-  background: var(--glass-bg);
-  backdrop-filter: blur(var(--blur-strength));
+  background: rgba(26, 31, 46, 0.4); // 降低不透明度到40%
   border: 1px solid var(--glass-border);
   transition: var(--transition-normal);
   box-shadow: var(--shadow-primary);
+  // 移除backdrop-filter和isolation，避免影响tooltip
 
   &:hover {
+    background: rgba(26, 31, 46, 0.6); // hover时稍微增加不透明度
     border-color: var(--border-primary);
     box-shadow: var(--shadow-primary), var(--shadow-glow);
   }
@@ -91,6 +105,15 @@ defineExpose({
 .slide-fade-enter-active,
 .slide-fade-leave-active {
   transition: all var(--transition-normal);
+}
+
+// 浅色主题下的透明样式
+:root[data-theme='light'] .sidebar-container {
+  background: rgba(255, 255, 255, 0.4); // 浅色主题下也降低不透明度
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.6);
+  }
 }
 
 .slide-fade-enter-from,

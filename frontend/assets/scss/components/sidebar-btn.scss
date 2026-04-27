@@ -19,8 +19,8 @@ $btn-shadow: var(--shadow-primary);
   transform: none;
 
   transition: var(--transition-normal);
-  backdrop-filter: blur(var(--blur-strength));
   position: relative;
+  // 移除backdrop-filter，避免创建层叠上下文影响tooltip
 
   &::before {
     content: '';
@@ -55,7 +55,7 @@ $btn-shadow: var(--shadow-primary);
     height: 24px;
     display: block;
     transition: transform var(--transition-normal);
-    z-index: 1;
+    // 移除z-index，避免影响tooltip
   }
 
   &:hover svg,

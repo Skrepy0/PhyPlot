@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import SideBar from '~/components/SideBar.vue'
 import Head from '~/components/Head.vue'
 import Foot from '~/components/Foot.vue'
@@ -9,6 +9,7 @@ import Dialog from '~/components/data-components/Dialog.vue'
 import DrawChartPage from '~/components/chart/DrawChartPage.vue'
 import ThemeSwitcher from '~/components/ThemeSwitcher.vue'
 import { useTheme } from '~/composables/theme'
+import { initGlobalTooltips } from '~/composables/tooltip'
 
 const dialogRef = ref()
 const toastRef = ref<InstanceType<typeof Toast> | null>(null)
@@ -16,6 +17,11 @@ const pageStatus = ref<InstanceType<typeof SideBar> | null>(null)
 
 // 主题系统
 const { effectiveTheme } = useTheme()
+
+// 在客户端初始化tooltip系统
+onMounted(() => {
+  initGlobalTooltips()
+})
 
 const toastAdd = (message: string, options?: any) => {
   if (toastRef.value?.add) {
@@ -46,6 +52,7 @@ provide('toast', toastAdd)
   <ThemeSwitcher />
   <div class="context">
     <SideBar ref="pageStatus" />
+    <Home :show="pageStatus?.showHome"></Home>
     <Settings :show="pageStatus?.showSettings"></Settings>
     <UnivariateStatistics :show="pageStatus?.showUnivariateStatistics" />
     <DrawChartPage :show="pageStatus?.showDrawChart"></DrawChartPage>
