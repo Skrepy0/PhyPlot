@@ -235,7 +235,7 @@ class Chart:
 
             if line.fit_type == 'linear':
                 y_fit = line.k * x_fit + line.m
-                line_label = line.name if line.name else None
+                line_label = line.name + f": y={line.k}x+{line.m}" if line.name else None
                 if not line.points and not line_label:
                     if abs(line.k) < 1e-12:
                         x_intercept = "∞"
