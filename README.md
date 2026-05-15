@@ -53,6 +53,8 @@ PhyPlot 是一个简单的物理实验数据处理工具，为高中和大学物
 
    # 安装后端依赖
    cd ../backend
+   python -m venv .venv
+   .venv\Scripts\activate
    pip install -r requirements.txt
    ```
 
