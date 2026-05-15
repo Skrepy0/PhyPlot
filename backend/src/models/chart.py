@@ -1,10 +1,10 @@
+import base64
 from dataclasses import dataclass, field
+from io import BytesIO
 from typing import List, Tuple, Dict, Any
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
-from io import BytesIO
-import base64
 
 matplotlib.use('Agg')
 plt.rcParams['font.sans-serif'] = ['SimHei', 'Microsoft YaHei', 'DejaVu Sans']

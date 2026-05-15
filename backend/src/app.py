@@ -1,7 +1,6 @@
 from flask import Flask, request
 from flask_cors import CORS
-import os
-from models.chart import FitLine,Chart
+from models.chart import FitLine, Chart
 
 app = Flask(__name__)
 CORS(app)
@@ -11,7 +10,7 @@ from flask import jsonify
 @app.route('/api/chart', methods=['POST'])
 def get_chart():
     response = request.get_json()
-    app.logger.debug(response)
+    # app.logger.debug(response)
     data = response["data"]
     config = response["config"]
     settings = response["settings"]
@@ -78,14 +77,10 @@ def get_chart():
         show_grid=settings["showGrid"],
         fit_lines=fit_lines
     )
-    app.logger.debug(settings["chartDarkMode"])
+    # app.logger.debug(settings["chartDarkMode"])
     chart.load_from_frontend(response["points"])
     plot_url = chart.to_base64()
     return jsonify({'image': 'data:image/png;base64,' + plot_url})
-
-# @app.route("/api/test",methods=["GET"])
-# def test():
-#     return jsonify({"a":"b"})
 
 if __name__ == '__main__':
     app.run(port=3001, debug=True)
