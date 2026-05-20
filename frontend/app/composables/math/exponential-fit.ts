@@ -35,9 +35,11 @@ function fitExponentialLM(data: Point[]) {
   let { a, b, c } = guessInitialParams(data)
 
   let lambda = new Decimal(1e-3)
+  const nu = new Decimal(2)
   let bestLoss = computeLoss(data, a, b, c)
 
-  for (let iter = 0; iter < 150; iter++) {
+  for (let iter = 0; iter < 200; iter++) {
+    // 构建 Hessian 近似 H = J^T J 和右端项 g = J^T r
     let H = [
       [new Decimal(0), new Decimal(0), new Decimal(0)],
       [new Decimal(0), new Decimal(0), new Decimal(0)],
@@ -66,42 +68,48 @@ function fitExponentialLM(data: Point[]) {
       H[2]![1] = H[2]![1]!.plus(Jc.times(Jb))
       H[2]![2] = H[2]![2]!.plus(Jc.times(Jc))
 
+      // 关键修复：g = J^T r，而不是 -J^T r
       g[0] = g[0]!.plus(Ja.times(r))
       g[1] = g[1]!.plus(Jb.times(r))
       g[2] = g[2]!.plus(Jc.times(r))
     }
 
-    if (loss.abs().lt(new Decimal(1e-20))) break
+    // 梯度足够小或损失极小则提前结束
+    if (g[0]!.abs().lt(new Decimal(1e-15)) && g[1]!.abs().lt(new Decimal(1e-15)) && g[2]!.abs().lt(new Decimal(1e-15))) break
+    if (loss.lt(new Decimal(1e-20))) break
 
+    // 添加阻尼项 H = H + lambda * I
     for (let i = 0; i < 3; i++) {
       H[i]![i] = H[i]![i]!.plus(lambda)
     }
 
     const delta = solve3x3(H, g)
-    if (!delta) break
+    if (!delta) {
+      lambda = lambda.times(nu)
+      continue
+    }
 
-    const stepScale = new Decimal(0.5)
-    const na = a.plus(delta[0].times(stepScale))
-    const nb = b.plus(delta[1].times(stepScale))
-    const nc = c.plus(delta[2].times(stepScale))
+    const na = a.plus(delta[0])
+    const nb = b.plus(delta[1])
+    const nc = c.plus(delta[2])
 
     if (na.abs().gt(new Decimal(1e20)) || nb.abs().gt(new Decimal(1e20))) {
-      lambda = lambda.times(10)
+      lambda = lambda.times(nu)
       continue
     }
 
     const newLoss = computeLoss(data, na, nb, nc)
     if (newLoss.lt(loss)) {
+      const improvement = loss.minus(newLoss)
       a = na
       b = nb
       c = nc
       bestLoss = newLoss
-      lambda = lambda.div(10)
+      lambda = lambda.div(nu)
+      if (improvement.lt(1e-15) && lambda.lt(1e-15)) break
     } else {
-      lambda = lambda.times(10)
+      lambda = lambda.times(nu)
     }
-
-    if (bestLoss.lt(1e-12) && lambda.lt(1e-12)) break
   }
 
   return computeStats(data, a, b, c, 3)
@@ -109,51 +117,55 @@ function fitExponentialLM(data: Point[]) {
 
 function guessInitialParams(data: Point[]) {
   const n = data.length
-  const maxY = data.reduce((m, p) => Decimal.max(m, p.y), data[0]!.y)
-  const minY = data.reduce((m, p) => Decimal.min(m, p.y), data[0]!.y)
 
-  let c = minY.minus(new Decimal(1e-6))
-  let shifted = data.map((p) => ({ x: p.x, y: p.y.minus(c) }))
-  let minShifted = shifted.reduce((m, p) => Decimal.min(m, p.y), shifted[0]!.y)
-  if (minShifted.lte(0)) {
-    c = c.minus(minShifted).plus(new Decimal(1e-6))
-    shifted = data.map((p) => ({ x: p.x, y: p.y.minus(c) }))
+  if (n >= 2) {
+    const yRange = data
+      .reduce((max, p) => Decimal.max(max, p.y), data[0]!.y)
+      .minus(data.reduce((min, p) => Decimal.min(min, p.y), data[0]!.y))
+
+    let c: Decimal
+    if (yRange.lt(new Decimal(1e-10))) {
+      c = new Decimal(0)
+    } else {
+      c = data.reduce((min, p) => Decimal.min(min, p.y), data[0]!.y).times(new Decimal(0.9))
+    }
+
+    let shifted = data.map((p) => ({ x: p.x, y: p.y.minus(c) }))
+    let minShifted = shifted.reduce((m, p) => Decimal.min(m, p.y), shifted[0]!.y)
+    if (minShifted.lte(0)) {
+      c = c.minus(minShifted).plus(new Decimal(1e-6))
+      shifted = data.map((p) => ({ x: p.x, y: p.y.minus(c) }))
+    }
+
+    let sumX = new Decimal(0)
+    let sumLnY = new Decimal(0)
+    let sumX2 = new Decimal(0)
+    let sumXLnY = new Decimal(0)
+
+    for (const p of shifted) {
+      const lnY = p.y.ln()
+      sumX = sumX.plus(p.x)
+      sumLnY = sumLnY.plus(lnY)
+      sumX2 = sumX2.plus(p.x.times(p.x))
+      sumXLnY = sumXLnY.plus(p.x.times(lnY))
+    }
+
+    const denom = sumX2.times(n).minus(sumX.times(sumX))
+    let b: Decimal, a: Decimal
+    if (denom.abs().gt(new Decimal(1e-12))) {
+      b = sumXLnY.times(n).minus(sumX.times(sumLnY)).div(denom)
+      const lnA = sumLnY.minus(b.times(sumX)).div(n)
+      a = lnA.exp()
+    } else {
+      b = new Decimal(0.5)
+      const avgLnY = sumLnY.div(n)
+      a = avgLnY.exp()
+    }
+
+    return { a, b, c }
   }
 
-  let sumX = new Decimal(0)
-  let sumLnY = new Decimal(0)
-  let sumX2 = new Decimal(0)
-  let sumXLnY = new Decimal(0)
-
-  for (const p of shifted) {
-    const lnY = p.y.ln()
-    sumX = sumX.plus(p.x)
-    sumLnY = sumLnY.plus(lnY)
-    sumX2 = sumX2.plus(p.x.times(p.x))
-    sumXLnY = sumXLnY.plus(p.x.times(lnY))
-  }
-
-  const denom = sumX2.times(n).minus(sumX.times(sumX))
-  let b: Decimal, a: Decimal
-  if (denom.abs().gt(1e-12)) {
-    b = sumXLnY.times(n).minus(sumX.times(sumLnY)).div(denom)
-    const lnA = sumLnY.minus(b.times(sumX)).div(n)
-    a = lnA.exp()
-  } else {
-    b = new Decimal(0)
-    const avgLnY = sumLnY.div(n)
-    a = avgLnY.exp()
-  }
-
-  const firstY = data[0]!.y
-  const lastY = data[n - 1]!.y
-  const increasing = lastY.gt(firstY)
-  if (!increasing && b.gt(0)) {
-    b = b.neg()
-    a = a.neg()
-  }
-
-  return { a, b, c }
+  return { a: new Decimal(1), b: new Decimal(0.5), c: new Decimal(0) }
 }
 
 function computeLoss(data: Point[], a: Decimal, b: Decimal, c: Decimal): Decimal {
@@ -180,7 +192,14 @@ function computeStats(data: Point[], a: Decimal, b: Decimal, c: Decimal, k: numb
     ssRes = ssRes.plus(p.y.minus(yhat).pow(2))
   }
 
-  const r2 = new Decimal(1).minus(ssRes.div(ssTot))
+  let r2: Decimal
+  if (ssTot.lt(new Decimal(1e-20))) {
+    r2 = new Decimal(1)
+  } else {
+    const r2Value = new Decimal(1).minus(ssRes.div(ssTot))
+    r2 = Decimal.max(new Decimal(0), Decimal.min(new Decimal(1), r2Value))
+  }
+
   const stderr = ssRes.div(n - k).sqrt()
   return { a, b, c, r2, stderr }
 }

@@ -85,11 +85,10 @@ const loadChart = async (data: DoubleResult, config: ChartData, points: { id: nu
       fitLines
         .filter((line: FitLine) => line.drawLinearRegionFittingLine)
         .forEach((line: FitLine) => {
-          const points = line.data
-          points.map((value) => {
-            x: value.x
-            y: value.y
-          })
+          const points = line.data.map((value) => ({
+            x: value.x,
+            y: value.y,
+          }))
           const rfl = getRegionFitLine(points)
           const k: string = rfl.k
           const b: string = rfl.m

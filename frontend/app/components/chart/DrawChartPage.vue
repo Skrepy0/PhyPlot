@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import DataTable from '~/components/data-components/DataTable.vue'
-import { inject, ref } from 'vue'
 import Chart from '~/components/chart/Chart.vue'
 import { solve, solveExponential, solveLogistic } from '~/composables/solve-data/double-data'
 import { verifyDataPoints } from '~/composables/tools'
@@ -21,7 +20,7 @@ const configData = ref<ChartData>({
   confidence: '68.3%',
   errorDistribution: '均匀分布',
   marginError: '0',
-  significantDigits: 4,
+  significantDigits: 8,
   xName: '',
   yName: '',
   pointCutline: '',
@@ -193,6 +192,13 @@ const removeFitLine = (id: number) => {
   }
 }
 
+const handleLineTypeChange = (line: FitLine) => {
+  // When line type changes to linear, reset drawLinearRegionFittingLine
+  if (line.type === 'linear') {
+    line.drawLinearRegionFittingLine = false
+  }
+}
+
 const calculateFitLine = async (line: FitLine) => {
   if (line.data.length < 2) {
     toast?.('至少需要2个数据点才能计算拟合', { type: 'warning' })
@@ -348,7 +354,7 @@ const calculateFitLine = async (line: FitLine) => {
 
                       <div class="form-row">
                         <label class="form-label">拟合类型</label>
-                        <select v-model="line.type" class="form-select">
+                        <select v-model="line.type" class="form-select" @change="handleLineTypeChange(line)">
                           <option value="linear">线性拟合</option>
                           <option value="exponential">指数拟合</option>
                           <option value="logistic">逻辑拟合</option>
